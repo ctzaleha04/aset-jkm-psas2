@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Pemantauan Aset JKM PSAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --primary: #1a3a6b;
+    --primary-dark: #0f2347;
+    --primary-light: #2a5298;
+    --accent: #c9a227;
+    --accent-light: #f0c94a;
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --border: #dde3ed;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --success: #16a34a;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --info: #2563eb;
+    --purple: #7c3aed;
+    --sidebar-width: 260px;
+    --header-height: 64px;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(26,58,107,0.10);
+    --shadow-lg: 0 8px 32px rgba(26,58,107,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+
+  /* ── LOGIN ─────────────────────────────────────────────── */
+  #login-screen {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 60%, #1e5799 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  #login-screen::before {
+    content:''; position:absolute; top:-80px; right:-80px;
+    width:350px; height:350px; border-radius:50%;
+    background:rgba(201,162,39,0.12);
+  }
+  #login-screen::after {
+    content:''; position:absolute; bottom:-60px; left:-60px;
+    width:280px; height:280px; border-radius:50%;
+    background:rgba(255,255,255,0.06);
+  }
+  .login-card {
+    background: var(--surface); border-radius: 18px;
+    box-shadow: var(--shadow-lg); padding: 40px 44px 36px;
+    width: 420px; max-width: 95vw; position: relative; z-index:1;
+    border-top: 5px solid var(--accent);
+  }
+  .login-logo { text-align: center; margin-bottom: 22px; }
+  .login-logo .logo-circle {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 30px; color: var(--accent); margin-bottom: 12px;
+    box-shadow: 0 4px 16px rgba(26,58,107,0.25);
+  }
+  .login-logo h1 { font-size: 13.5px; font-weight: 700; color: var(--primary); line-height: 1.4; }
+  .login-logo p { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+  .login-divider { height: 1px; background: var(--border); margin: 18px 0; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .form-group label span { color: var(--danger); }
+  .form-control {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13.5px;
+    color: var(--text); background: #f8fafc; transition: border 0.2s, box-shadow 0.2s;
+  }
+  .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,58,107,0.10); background:#fff; }
+  .input-icon-wrap { position: relative; }
+  .input-icon-wrap .form-control { padding-left: 40px; }
+  .input-icon-wrap i { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 20px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; }
+  .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; box-shadow: 0 3px 10px rgba(26,58,107,0.25); }
+  .btn-primary:hover { background: linear-gradient(135deg, var(--primary-dark), var(--primary)); transform: translateY(-1px); }
+  .btn-accent { background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: var(--primary-dark); }
+  .btn-accent:hover { filter: brightness(1.07); }
+  .btn-success { background: var(--success); color:#fff; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: var(--danger); color:#fff; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-warning { background: var(--warning); color:#fff; }
+  .btn-secondary { background: #e2e8f0; color: var(--text); }
+  .btn-secondary:hover { background: #cbd5e1; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-icon { padding: 7px 10px; }
+  .btn-full { width: 100%; }
+  .login-error { background: #fef2f2; border: 1px solid #fca5a5; color: var(--danger); padding: 9px 14px; border-radius: 7px; font-size: 12.5px; margin-bottom: 14px; display: none; }
+
+  /* ── APP SHELL ─────────────────────────────────────────── */
+  #app-shell { display: none; height: 100vh; overflow: hidden; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: var(--sidebar-width); background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+    display: flex; flex-direction: column; z-index: 100;
+    box-shadow: 3px 0 20px rgba(0,0,0,0.18);
+  }
+  .sidebar-header {
+    padding: 20px 18px 16px; border-bottom: 1px solid rgba(255,255,255,0.10);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .sidebar-logo {
+    width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--primary-dark); font-weight: 700;
+  }
+  .sidebar-title { color: #fff; }
+  .sidebar-title .t1 { font-size: 11.5px; font-weight: 700; line-height: 1.3; }
+  .sidebar-title .t2 { font-size: 10px; color: rgba(255,255,255,0.6); }
+  .sidebar-nav { flex: 1; overflow-y: auto; padding: 10px 0; }
+  .sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+  .nav-section { padding: 6px 16px 3px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); letter-spacing: 1px; text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 18px; color: rgba(255,255,255,0.75); cursor: pointer;
+    transition: all 0.2s; font-size: 13px; font-weight: 500;
+    border-left: 3px solid transparent; margin: 1px 0;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.14); color: #fff; border-left-color: var(--accent); }
+  .nav-item .nav-icon { width: 20px; text-align: center; font-size: 14px; }
+  .sidebar-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.10); }
+  .user-chip { display: flex; align-items: center; gap: 10px; }
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--primary-dark);
+  }
+  .user-info .u-name { font-size: 12.5px; font-weight: 600; color: #fff; }
+  .user-info .u-role { font-size: 10.5px; color: rgba(255,255,255,0.55); }
+  .header {
+    position: fixed; left: var(--sidebar-width); right: 0; top: 0;
+    height: var(--header-height); background: var(--surface);
+    border-bottom: 1px solid var(--border); z-index: 90;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; box-shadow: 0 1px 8px rgba(26,58,107,0.06);
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .page-title { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .breadcrumb { font-size: 11.5px; color: var(--text-muted); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .notif-btn {
+    position: relative; width: 38px; height: 38px; border-radius: 9px;
+    background: var(--bg); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-muted); font-size: 15px;
+    transition: all 0.2s;
+  }
+  .notif-btn:hover { background: #e8edf5; color: var(--primary); }
+  .notif-badge {
+    position: absolute; top: -3px; right: -3px; width: 17px; height: 17px;
+    border-radius: 50%; background: var(--danger); color: #fff;
+    font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .main-content {
+    margin-left: var(--sidebar-width); margin-top: var(--header-height);
+    padding: 24px; height: calc(100vh - var(--header-height)); overflow-y: auto;
+  }
+  .main-content::-webkit-scrollbar { width: 6px; }
+  .main-content::-webkit-scrollbar-thumb { background: #c8d3e3; border-radius: 3px; }
+
+  /* ── CARDS ─────────────────────────────────────────────── */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border-radius: var(--radius);
+    padding: 18px 18px 14px; box-shadow: var(--shadow);
+    border-left: 4px solid var(--primary); transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .stat-card .sc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .stat-card .sc-icon { width: 40px; height: 40px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .stat-card .sc-label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 3px; }
+  .stat-card .sc-value { font-size: 28px; font-weight: 700; color: var(--primary); line-height: 1; }
+  .stat-card .sc-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 5px; }
+  .alert-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .alert-card {
+    background: var(--surface); border-radius: var(--radius); padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow);
+    border-left: 4px solid var(--warning);
+  }
+  .alert-card .ac-icon { font-size: 22px; }
+  .alert-card .ac-val { font-size: 22px; font-weight: 700; line-height: 1; }
+  .alert-card .ac-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+  .chart-card { background: var(--surface); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+  .chart-card h3 { font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 14px; }
+  .chart-card canvas { max-height: 220px; }
+
+  /* ── TABLES ─────────────────────────────────────────────── */
+  .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .card-header h3 { font-size: 14px; font-weight: 700; color: var(--primary); }
+  .card-body { padding: 18px 20px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: #f1f5fb; color: var(--primary); font-weight: 700; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); white-space: nowrap; font-size: 12px; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid #f0f4f8; color: var(--text); vertical-align: middle; }
+  tbody tr:hover { background: #f8faff; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ── BADGES ────────────────────────────────────────────── */
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .badge-digunakan { background: #dcfce7; color: #15803d; }
+  .badge-tidak { background: #f1f5f9; color: #64748b; }
+  .badge-pembaikan { background: #fef3c7; color: #b45309; }
+  .badge-selenggara { background: #e0e7ff; color: #4338ca; }
+  .badge-pelupusan { background: #fee2e2; color: #b91c1c; }
+  .badge-hilang { background: #fce7f3; color: #be185d; }
+  .badge-baru { background: #dbeafe; color: #1d4ed8; }
+  .badge-semakan { background: #fef3c7; color: #b45309; }
+  .badge-baiki { background: #ede9fe; color: #6d28d9; }
+  .badge-selesai { background: #dcfce7; color: #15803d; }
+  .badge-paj { background: #dbeafe; color: #1e40af; }
+  .badge-kj { background: #e0e7ff; color: #4338ca; }
+  .badge-ppj { background: #dcfce7; color: #166534; }
+  .badge-penyelia { background: #fef3c7; color: #92400e; }
+  .badge-pbmb { background: #f1f5f9; color: #475569; }
+
+  /* ── FILTER BAR ─────────────────────────────────────────── */
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+  .filter-bar .form-control { width: auto; min-width: 150px; font-size: 12.5px; padding: 8px 12px; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
+  .search-wrap input { width: 100%; padding: 8px 12px 8px 36px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'Poppins',sans-serif; font-size: 13px; background: #f8fafc; }
+  .search-wrap input:focus { outline: none; border-color: var(--primary); }
+  .search-wrap i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+
+  /* ── MODALS ─────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(15,35,71,0.55); z-index: 200;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-lg);
+    width: 100%; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column;
+    transform: translateY(20px); transition: transform 0.2s;
+  }
+  .modal-overlay.show .modal-box { transform: translateY(0); }
+  .modal-box.modal-sm { max-width: 440px; }
+  .modal-box.modal-md { max-width: 660px; }
+  .modal-box.modal-lg { max-width: 860px; }
+  .modal-header { padding: 18px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .modal-header h3 { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .modal-close { width: 30px; height: 30px; border-radius: 7px; border: none; background: #f1f5f9; cursor: pointer; font-size: 15px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: #e2e8f0; color: var(--text); }
+  .modal-body { padding: 22px; overflow-y: auto; }
+  .modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  textarea.form-control { resize: vertical; min-height: 70px; }
+  select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 18px; }
+
+  /* ── PROGRESS BAR ───────────────────────────────────────── */
+  .progress { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; background: linear-gradient(90deg, var(--primary-light), var(--accent)); }
+
+  /* ── CALENDAR ───────────────────────────────────────────── */
+  .calendar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .cal-month { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .cal-month-header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: #fff; padding: 10px 14px; font-size: 13px; font-weight: 700; }
+  .cal-month-body { padding: 10px 12px; }
+  .cal-event { display: flex; align-items: flex-start; gap: 7px; padding: 5px 0; border-bottom: 1px solid #f0f4f8; font-size: 11.5px; }
+  .cal-event:last-child { border-bottom: none; }
+  .cal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .cal-event-text { flex: 1; color: var(--text); }
+  .cal-check { cursor: pointer; color: var(--text-muted); transition: color 0.15s; font-size: 13px; }
+  .cal-check.done { color: var(--success); }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .cal-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+
+  /* ── REPORT TABS ─────────────────────────────────────────── */
+  .tab-bar { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+  .tab-btn { padding: 9px 18px; border: none; background: none; font-family: 'Poppins',sans-serif; font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+  .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-btn:hover { color: var(--primary); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── RESPONSIVE INFO ─────────────────────────────────────── */
+  .info-row { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .info-item { min-width: 200px; flex: 1; }
+  .info-item .info-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .info-item .info-value { font-size: 13.5px; color: var(--text); font-weight: 500; margin-top: 1px; }
+  .info-divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+
+  /* ── PAGE HEADER ─────────────────────────────────────────── */
+  .page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+  .page-header h2 { font-size: 17px; font-weight: 700; color: var(--primary); }
+  .page-header .phsub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── EMPTY STATE ─────────────────────────────────────────── */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.35; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── TOAST ───────────────────────────────────────────────── */
+  #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--primary-dark); color: #fff; padding: 11px 18px; border-radius: 9px; font-size: 13px; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; max-width: 340px; }
+  .toast.success { background: var(--success); }
+  .toast.danger { background: var(--danger); }
+  .toast.warning { background: var(--warning); }
+  @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ── UTILITIES ───────────────────────────────────────────── */
+  .text-center { text-align: center; }
+  .text-right { text-align: right; }
+  .text-muted { color: var(--text-muted); }
+  .fw-bold { font-weight: 700; }
+  .mt-1 { margin-top: 8px; } .mt-2 { margin-top: 16px; } .mt-3 { margin-top: 24px; }
+  .mb-1 { margin-bottom: 8px; } .mb-2 { margin-bottom: 16px; } .mb-3 { margin-bottom: 24px; }
+  .gap-2 { gap: 16px; }
+  .flex { display: flex; } .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 1100px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 780px) {
+    :root { --sidebar-width: 0px; }
+    .sidebar { transform: translateX(-260px); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .calendar-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN SCREEN ══════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-circle"><i class="fa-solid fa-gears"></i></div>
+      <h1>DASHBOARD PEMANTAUAN ASET<br>JKM PSAS</h1>
+      <p>Jabatan Kejuruteraan Mekanikal &bull; Politeknik Sultan Azlan Shah</p>
+    </div>
+    <div class="login-divider"></div>
+    <div id="login-error" class="login-error"><i class="fa-solid fa-circle-exclamation"></i> <span id="login-error-msg"></span></div>
+    <div class="form-group">
+      <label>Nama Pengguna <span>*</span></label>
+      <div class="input-icon-wrap">
+        <i class="fa-regular fa-user"></i>
+        <input type="text" id="login-user" class="form-control" placeholder="Masukkan nama pengguna" autocomplete="username">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Kata Laluan <span>*</span></label>
+      <div class="input-icon-wrap">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="login-pass" class="form-control" placeholder="Masukkan kata laluan" autocomplete="current-password">
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:6px; padding:12px;">
+      <i class="fa-solid fa-right-to-bracket"></i> Log Masuk
+    </button>
+    <p style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:18px;">
+      Sistem ini adalah untuk kegunaan rasmi JKM PSAS sahaja.<br>
+      <strong>Akaun lalai:</strong> paj_jkm / psas2024
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════ APP SHELL ══════════════════ -->
+<div id="app-shell">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo"><i class="fa-solid fa-gears"></i></div>
+      <div class="sidebar-title">
+        <div class="t1">ASET JKM PSAS</div>
+        <div class="t2">Sistem Pemantauan Aset</div>
+      </div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Utama</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+        <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span> Dashboard Ringkasan
+      </div>
+      <div class="nav-section">Pengurusan Aset</div>
+      <div class="nav-item" onclick="showPage('aset')" id="nav-aset">
+        <span class="nav-icon"><i class="fa-solid fa-box-archive"></i></span> Pendaftaran Aset
+      </div>
+      <div class="nav-item" onclick="showPage('pemeriksaan')" id="nav-pemeriksaan">
+        <span class="nav-icon"><i class="fa-solid fa-clipboard-check"></i></span> Pemeriksaan P&amp;P
+      </div>
+      <div class="nav-item" onclick="showPage('kerosakan')" id="nav-kerosakan">
+        <span class="nav-icon"><i class="fa-solid fa-triangle-exclamation"></i></span> Laporan Kerosakan
+      </div>
+      <div class="nav-section">Perancangan &amp; Laporan</div>
+      <div class="nav-item" onclick="showPage('kalender')" id="nav-kalender">
+        <span class="nav-icon"><i class="fa-regular fa-calendar-days"></i></span> Kalender Pemantauan
+      </div>
+      <div class="nav-item" onclick="showPage('laporan')" id="nav-laporan">
+        <span class="nav-icon"><i class="fa-solid fa-file-chart-column"></i></span> Laporan &amp; Analitik
+      </div>
+      <div class="nav-section" id="admin-section">Pentadbiran</div>
+      <div class="nav-item" onclick="showPage('pengguna')" id="nav-pengguna">
+        <span class="nav-icon"><i class="fa-solid fa-users-gear"></i></span> Pengurusan Pengguna
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="sidebar-avatar">P</div>
+        <div class="user-info">
+          <div class="u-name" id="sidebar-name">–</div>
+          <div class="u-role" id="sidebar-role">–</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <div>
+        <div class="page-title" id="header-title">Dashboard Ringkasan</div>
+        <div class="breadcrumb" id="header-breadcrumb">JKM PSAS &rsaquo; Dashboard</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="notif-btn" onclick="showPage('kerosakan')" title="Laporan Kerosakan Baharu">
+        <i class="fa-regular fa-bell"></i>
+        <span class="notif-badge" id="notif-count">0</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="doLogout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Log Keluar
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- ═══ PAGE: DASHBOARD ═══ -->
+    <section id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h2>Dashboard Ringkasan Aset</h2>
+          <div class="phsub" id="dash-date"></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-secondary btn-sm" onclick="renderDashboard()"><i class="fa-solid fa-rotate-right"></i> Muat Semula</button>
+        </div>
+      </div>
+      <div class="cards-grid" id="summary-cards"></div>
+      <div class="alert-cards" id="alert-cards"></div>
+      <div class="charts-grid">
+        <div class="chart-card"><h3><i class="fa-solid fa-chart-pie" style="color:var(--primary);margin-right:7px;"></i>Taburan Status Aset</h3><canvas id="chartStatus"></canvas></div>
+        <div class="chart-card"><h3><i class="fa-solid fa-chart-bar" style="color:var(--primary);margin-right:7px;"></i>Aset Mengikut Bengkel/Makmal</h3><canvas id="chartBengkel"></canvas></div>
+        <div class="chart-card"><h3><i class="fa-solid fa-chart-line" style="color:var(--primary);margin-right:7px;"></i>Kerosakan Dilaporkan (12 Bulan)</h3><canvas id="chartKerosakan"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3><i class="fa-solid fa-building" style="margin-right:8px;color:var(--primary)"></i>Ringkasan Mengikut Bengkel/Makmal</h3></div>
+        <div class="card-body table-wrap"><table id="tbl-bengkel-summary"><thead><tr><th>Bengkel / Makmal</th><th>Jumlah</th><th>Digunakan</th><th>Tidak Digunakan</th><th>Pembaikan</th><th>Diselenggara</th><th>Hilang</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3><i class="fa-solid fa-bell" style="margin-right:8px;color:var(--danger)"></i>Tindakan Segera Diperlukan</h3></div>
+        <div class="card-body" id="tindakan-segera"></div>
+      </div>
+    </section>
+
+    <!-- ═══ PAGE: ASET ═══ -->
+    <section id="page-aset" class="hidden">
+      <div class="page-header">
+        <div>
+          <h2>Pendaftaran Aset — KEW.PA-7</h2>
+          <div class="phsub">Rekod dan urus semua aset JKM PSAS</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-success btn-sm" onclick="exportAsetExcel()"><i class="fa-solid fa-file-excel"></i> Eksport Excel</button>
+          <button class="btn btn-primary btn-sm" onclick="openAsetModal()" id="btn-tambah-aset"><i class="fa-solid fa-plus"></i> Tambah Aset</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="aset-search" placeholder="Cari no. pendaftaran / nama aset..." oninput="renderAsetTable()"></div>
+        <select class="form-control" id="aset-filter-bengkel" onchange="renderAsetTable()">
+          <option value="">Semua Bengkel/Makmal</option>
+          <option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option>
+        </select>
+        <select class="form-control" id="aset-filter-kategori" onchange="renderAsetTable()">
+          <option value="">Semua Kategori</option>
+          <option>Peralatan P&P</option><option>Perabot</option><option>ICT</option><option>Jentera</option><option>Lain-lain</option>
+        </select>
+        <select class="form-control" id="aset-filter-status" onchange="renderAsetTable()">
+          <option value="">Semua Status</option>
+          <option>Sedang Digunakan</option><option>Tidak Digunakan</option><option>Perlu Pembaikan</option><option>Sedang Diselenggara</option><option>Cadangan Pelupusan</option><option>Hilang</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Senarai Aset</h3><span id="aset-count" class="text-muted" style="font-size:12px;"></span></div>
+        <div class="card-body table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>No. Pendaftaran</th><th>Nama Aset</th><th>Kategori</th><th>Bengkel/Makmal</th><th>Status</th><th>Tarikh Pemeriksaan</th><th>Tindakan</th></tr></thead>
+            <tbody id="aset-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PAGE: PEMERIKSAAN ═══ -->
+    <section id="page-pemeriksaan" class="hidden">
+      <div class="page-header">
+        <div>
+          <h2>Pemeriksaan Peralatan P&amp;P</h2>
+          <div class="phsub">Penjejakan pemeriksaan tahunan mengikut bengkel/makmal (Jadual: Ogos)</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-success btn-sm" onclick="exportPemeriksaanExcel()"><i class="fa-solid fa-file-excel"></i> Eksport Excel</button>
+          <button class="btn btn-primary btn-sm" onclick="openPemeriksaanModal()"><i class="fa-solid fa-plus"></i> Rekod Pemeriksaan</button>
+        </div>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header"><h3>Kemajuan Pemeriksaan Mengikut Bengkel/Makmal</h3></div>
+        <div class="card-body"><div id="pemeriksaan-progress"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Rekod Pemeriksaan</h3>
+          <div class="btn-group">
+            <select class="form-control" id="periksa-filter-bengkel" onchange="renderPemeriksaanTable()" style="width:180px;font-size:12px;padding:6px 10px;">
+              <option value="">Semua Bengkel</option>
+              <option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>No. Pemeriksaan</th><th>No. Aset</th><th>Nama Aset</th><th>Bengkel</th><th>Keadaan</th><th>Fungsi</th><th>Status Tindakan</th><th>Tarikh</th><th>Tindakan</th></tr></thead>
+            <tbody id="pemeriksaan-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PAGE: KEROSAKAN ═══ -->
+    <section id="page-kerosakan" class="hidden">
+      <div class="page-header">
+        <div>
+          <h2>Laporan Kerosakan — KEW.PA-10</h2>
+          <div class="phsub">Penjejakan kerosakan, pembaikan dan cadangan pelupusan</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-success btn-sm" onclick="exportKerosakanExcel()"><i class="fa-solid fa-file-excel"></i> Eksport Excel</button>
+          <button class="btn btn-primary btn-sm" onclick="openKerosakanModal()"><i class="fa-solid fa-plus"></i> Lapor Kerosakan</button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <select class="form-control" id="rosak-filter-bengkel" onchange="renderKerosakanTable()">
+          <option value="">Semua Bengkel</option>
+          <option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option>
+        </select>
+        <select class="form-control" id="rosak-filter-status" onchange="renderKerosakanTable()">
+          <option value="">Semua Status</option>
+          <option>Baru</option><option>Dalam Semakan</option><option>Dihantar Baiki</option><option>Selesai</option><option>Cadangan Pelupusan</option>
+        </select>
+        <input type="date" class="form-control" id="rosak-filter-dari" onchange="renderKerosakanTable()" style="width:160px;" title="Tarikh Dari">
+        <input type="date" class="form-control" id="rosak-filter-hingga" onchange="renderKerosakanTable()" style="width:160px;" title="Tarikh Hingga">
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Senarai Laporan Kerosakan</h3><span id="rosak-count" class="text-muted" style="font-size:12px;"></span></div>
+        <div class="card-body table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>No. Laporan</th><th>No. Aset</th><th>Nama Aset</th><th>Bengkel</th><th>Jenis Kerosakan</th><th>Status</th><th>Dilaporkan</th><th>Tarikh</th><th>Tindakan</th></tr></thead>
+            <tbody id="kerosakan-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PAGE: KALENDER ═══ -->
+    <section id="page-kalender" class="hidden">
+      <div class="page-header">
+        <div>
+          <h2>Kalender Pemantauan Tahunan</h2>
+          <div class="phsub">Jadual aktiviti pemantauan aset JKM PSAS mengikut prosedur kualiti</div>
+        </div>
+        <div class="btn-group">
+          <select class="form-control" id="kal-tahun" onchange="renderKalender()" style="width:110px;font-size:12px;padding:7px 10px;"></select>
+        </div>
+      </div>
+      <div class="cal-legend">
+        <div class="cal-legend-item"><div class="cal-dot" style="background:#16a34a;"></div> Penyelenggaraan</div>
+        <div class="cal-legend-item"><div class="cal-dot" style="background:#2563eb;"></div> Pelaporan</div>
+        <div class="cal-legend-item"><div class="cal-dot" style="background:#d97706;"></div> Pemeriksaan P&amp;P</div>
+        <div class="cal-legend-item"><div class="cal-dot" style="background:#7c3aed;"></div> Semakan Pengurusan</div>
+        <div class="cal-legend-item"><div class="cal-dot" style="background:#64748b;"></div> Berterusan</div>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </section>
+
+    <!-- ═══ PAGE: LAPORAN ═══ -->
+    <section id="page-laporan" class="hidden">
+      <div class="page-header">
+        <div>
+          <h2>Laporan &amp; Analitik</h2>
+          <div class="phsub">Jana dan eksport laporan rasmi untuk PAJ dan Ketua Jabatan</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('laporan','status')">Ringkasan Status</button>
+        <button class="tab-btn" onclick="switchTab('laporan','pemeriksaan')">Rekod Pemeriksaan</button>
+        <button class="tab-btn" onclick="switchTab('laporan','kerosakan')">Rekod Kerosakan</button>
+        <button class="tab-btn" onclick="switchTab('laporan','pelupusan')">Cadangan Pelupusan</button>
+      </div>
+      <!-- Filters -->
+      <div class="filter-bar" style="margin-bottom:20px;">
+        <select class="form-control" id="lap-filter-bengkel" onchange="renderLaporan()">
+          <option value="">Semua Bengkel</option>
+          <option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option>
+        </select>
+        <select class="form-control" id="lap-filter-kategori" onchange="renderLaporan()">
+          <option value="">Semua Kategori</option>
+          <option>Peralatan P&P</option><option>Perabot</option><option>ICT</option><option>Jentera</option><option>Lain-lain</option>
+        </select>
+        <select class="form-control" id="lap-filter-status" onchange="renderLaporan()">
+          <option value="">Semua Status</option>
+          <option>Sedang Digunakan</option><option>Tidak Digunakan</option><option>Perlu Pembaikan</option><option>Sedang Diselenggara</option><option>Cadangan Pelupusan</option><option>Hilang</option>
+        </select>
+        <input type="date" class="form-control" id="lap-dari" onchange="renderLaporan()" style="width:155px;" title="Tarikh Dari">
+        <input type="date" class="form-control" id="lap-hingga" onchange="renderLaporan()" style="width:155px;" title="Tarikh Hingga">
+        <button class="btn btn-success btn-sm" onclick="exportCurrentLaporan()"><i class="fa-solid fa-file-excel"></i> Eksport Excel</button>
+        <button class="btn btn-secondary btn-sm" onclick="resetLaporanFilter()"><i class="fa-solid fa-rotate-left"></i> Tetapkan Semula</button>
+      </div>
+      <!-- Chart -->
+      <div class="card mb-2"><div class="card-body"><canvas id="chartLaporan" style="max-height:200px;"></canvas></div></div>
+      <!-- Tab panels -->
+      <div id="tab-laporan-status" class="tab-panel active">
+        <div class="card"><div class="card-header"><h3>Laporan Ringkasan Status Aset</h3></div><div class="card-body table-wrap"><table><thead><tr><th>#</th><th>No. Pendaftaran</th><th>Nama Aset</th><th>Kategori</th><th>Bengkel</th><th>Status</th><th>Pegawai</th><th>Tarikh Pemeriksaan</th></tr></thead><tbody id="lap-status-tbody"></tbody></table></div></div>
+      </div>
+      <div id="tab-laporan-pemeriksaan" class="tab-panel">
+        <div class="card"><div class="card-header"><h3>Laporan Rekod Pemeriksaan P&amp;P</h3></div><div class="card-body table-wrap"><table><thead><tr><th>#</th><th>No. Pemeriksaan</th><th>No. Aset</th><th>Nama Aset</th><th>Bengkel</th><th>Keadaan</th><th>Fungsi</th><th>Pemeriksa</th><th>Tarikh</th></tr></thead><tbody id="lap-periksa-tbody"></tbody></table></div></div>
+      </div>
+      <div id="tab-laporan-kerosakan" class="tab-panel">
+        <div class="card"><div class="card-header"><h3>Laporan Rekod Kerosakan &amp; Tindakan</h3></div><div class="card-body table-wrap"><table><thead><tr><th>#</th><th>No. Laporan</th><th>Nama Aset</th><th>Bengkel</th><th>Jenis</th><th>Status</th><th>Cadangan PAJ</th><th>Tarikh</th></tr></thead><tbody id="lap-rosak-tbody"></tbody></table></div></div>
+      </div>
+      <div id="tab-laporan-pelupusan" class="tab-panel">
+        <div class="card"><div class="card-header"><h3>Senarai Cadangan Pelupusan</h3></div><div class="card-body table-wrap"><table><thead><tr><th>#</th><th>No. Pendaftaran</th><th>Nama Aset</th><th>Model</th><th>Bengkel</th><th>Nilai (RM)</th><th>Tahun Perolehan</th><th>Status Kelulusan KJ</th></tr></thead><tbody id="lap-pelupusan-tbody"></tbody></table></div></div>
+      </div>
+    </section>
+
+    <!-- ═══ PAGE: PENGGUNA ═══ -->
+    <section id="page-pengguna" class="hidden">
+      <div class="page-header">
+        <div>
+          <h2>Pengurusan Pengguna</h2>
+          <div class="phsub">Urus akaun pengguna sistem (PAJ sahaja)</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openUserModal()"><i class="fa-solid fa-user-plus"></i> Tambah Pengguna</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Senarai Pengguna</h3></div>
+        <div class="card-body table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Nama Penuh</th><th>Nama Pengguna</th><th>Peranan</th><th>Bengkel/Makmal</th><th>Status</th><th>Tindakan</th></tr></thead>
+            <tbody id="user-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<!-- ══════════════════ MODALS ══════════════════ -->
+
+<!-- Modal: Tambah/Edit Aset -->
+<div class="modal-overlay" id="modal-aset">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3 id="modal-aset-title">Tambah Aset Baharu</h3>
+      <button class="modal-close" onclick="closeModal('modal-aset')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="aset-edit-id">
+      <div class="section-title">Maklumat Asas Aset</div>
+      <div class="form-row">
+        <div class="form-group"><label>No. Pendaftaran Aset <span style="color:var(--danger)">*</span></label><input type="text" id="a-no_pendaftaran" class="form-control" placeholder="Contoh: JKM/BF/001"></div>
+        <div class="form-group"><label>Nama Aset <span style="color:var(--danger)">*</span></label><input type="text" id="a-nama_aset" class="form-control" placeholder="Nama peralatan"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Kategori</label><select id="a-kategori" class="form-control"><option>Peralatan P&P</option><option>Perabot</option><option>ICT</option><option>Jentera</option><option>Lain-lain</option></select></div>
+        <div class="form-group"><label>Model / Jenama</label><input type="text" id="a-model" class="form-control" placeholder="Model atau jenama"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>No. Siri</label><input type="text" id="a-no_siri" class="form-control"></div>
+        <div class="form-group"><label>Tahun Perolehan</label><input type="number" id="a-tahun" class="form-control" min="1990" max="2099" placeholder="2020"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nilai Aset (RM)</label><input type="number" id="a-nilai" class="form-control" placeholder="0.00" step="0.01"></div>
+        <div class="form-group"><label>Bengkel / Makmal</label><select id="a-bengkel" class="form-control"><option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option></select></div>
+      </div>
+      <div class="info-divider"></div>
+      <div class="section-title">Maklumat Lokasi &amp; Tanggungjawab</div>
+      <div class="form-row">
+        <div class="form-group"><label>Lokasi Rekod</label><input type="text" id="a-lokasi_rekod" class="form-control" placeholder="Lokasi mengikut rekod KEW"></div>
+        <div class="form-group"><label>Lokasi Sebenar</label><input type="text" id="a-lokasi_sebenar" class="form-control" placeholder="Lokasi semasa fizikal"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Pegawai Bertanggungjawab</label><input type="text" id="a-pegawai" class="form-control" placeholder="Nama pegawai"></div>
+        <div class="form-group"><label>Status Semasa</label><select id="a-status" class="form-control"><option>Sedang Digunakan</option><option>Tidak Digunakan</option><option>Perlu Pembaikan</option><option>Sedang Diselenggara</option><option>Cadangan Pelupusan</option><option>Hilang</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Tarikh Pemeriksaan Terakhir</label><input type="date" id="a-tarikh_periksa" class="form-control"></div>
+        <div class="form-group"><label>Tarikh Selenggara Seterusnya</label><input type="date" id="a-tarikh_selenggara" class="form-control"></div>
+      </div>
+      <div class="form-group"><label>Catatan</label><textarea id="a-catatan" class="form-control" rows="3" placeholder="Nota tambahan atau pemerhatian..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-aset')">Batal</button>
+      <button class="btn btn-primary" onclick="saveAset()"><i class="fa-solid fa-floppy-disk"></i> Simpan Aset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Butiran Aset -->
+<div class="modal-overlay" id="modal-aset-detail">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3>Butiran Aset</h3>
+      <button class="modal-close" onclick="closeModal('modal-aset-detail')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="modal-aset-detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-aset-detail')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Pemeriksaan -->
+<div class="modal-overlay" id="modal-pemeriksaan">
+  <div class="modal-box modal-md">
+    <div class="modal-header">
+      <h3 id="modal-periksa-title">Rekod Pemeriksaan Aset</h3>
+      <button class="modal-close" onclick="closeModal('modal-pemeriksaan')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="periksa-edit-id">
+      <div class="form-row">
+        <div class="form-group"><label>No. Pendaftaran Aset <span style="color:var(--danger)">*</span></label><input type="text" id="p-no_aset" class="form-control" placeholder="Masukkan no. pendaftaran aset"></div>
+        <div class="form-group"><label>Nama Aset</label><input type="text" id="p-nama_aset" class="form-control" placeholder="Auto-isi atau masukkan nama"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Bengkel / Makmal</label><select id="p-bengkel" class="form-control"><option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option></select></div>
+        <div class="form-group"><label>Tarikh Pemeriksaan</label><input type="date" id="p-tarikh" class="form-control"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Keadaan Fizikal</label><select id="p-keadaan" class="form-control"><option>Baik</option><option>Rosak Ringan</option><option>Rosak Teruk</option></select></div>
+        <div class="form-group"><label>Fungsi Peralatan</label><select id="p-fungsi" class="form-control"><option>Berfungsi</option><option>Tidak Berfungsi</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Lokasi Semasa Pemeriksaan</label><input type="text" id="p-lokasi" class="form-control"></div>
+        <div class="form-group"><label>Pemeriksa</label><input type="text" id="p-pemeriksa" class="form-control"></div>
+      </div>
+      <div class="form-group"><label>Status Tindakan</label><select id="p-tindakan" class="form-control"><option>Tiada</option><option>Perlu Baiki</option><option>Cadang Pelupus</option></select></div>
+      <div class="form-group"><label>Catatan Pemeriksaan</label><textarea id="p-catatan" class="form-control" rows="3"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pemeriksaan')">Batal</button>
+      <button class="btn btn-primary" onclick="savePemeriksaan()"><i class="fa-solid fa-floppy-disk"></i> Simpan Rekod</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Laporan Kerosakan -->
+<div class="modal-overlay" id="modal-kerosakan">
+  <div class="modal-box modal-md">
+    <div class="modal-header">
+      <h3 id="modal-rosak-title">Laporan Kerosakan Baharu</h3>
+      <button class="modal-close" onclick="closeModal('modal-kerosakan')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="rosak-edit-id">
+      <div class="form-row">
+        <div class="form-group"><label>No. Pendaftaran Aset <span style="color:var(--danger)">*</span></label><input type="text" id="r-no_aset" class="form-control" placeholder="No. pendaftaran aset"></div>
+        <div class="form-group"><label>Nama Aset</label><input type="text" id="r-nama_aset" class="form-control"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Bengkel / Makmal</label><select id="r-bengkel" class="form-control"><option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option></select></div>
+        <div class="form-group"><label>Jenis Kerosakan</label><select id="r-jenis" class="form-control"><option>Elektrik</option><option>Mekanikal</option><option>Fizikal</option><option>Hidraulik</option><option>Pneumatik</option><option>Lain-lain</option></select></div>
+      </div>
+      <div class="form-group"><label>Keterangan Kerosakan <span style="color:var(--danger)">*</span></label><textarea id="r-keterangan" class="form-control" rows="3" placeholder="Huraikan kerosakan dengan terperinci..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Dilaporkan Oleh</label><input type="text" id="r-dilaporkan" class="form-control"></div>
+        <div class="form-group"><label>Tarikh Laporan</label><input type="date" id="r-tarikh" class="form-control"></div>
+      </div>
+      <div id="rosak-tindakan-section" class="hidden">
+        <div class="info-divider"></div>
+        <div class="section-title">Tindakan PAJ / KJ</div>
+        <div class="form-row">
+          <div class="form-group"><label>Status Laporan</label><select id="r-status" class="form-control"><option>Baru</option><option>Dalam Semakan</option><option>Dihantar Baiki</option><option>Selesai</option><option>Cadangan Pelupusan</option></select></div>
+          <div class="form-group"><label>Kelulusan KJ</label><select id="r-kelulusan" class="form-control"><option>Menunggu</option><option>Diluluskan</option><option>Ditolak</option></select></div>
+        </div>
+        <div class="form-group"><label>Cadangan Tindakan PAJ</label><textarea id="r-cadangan" class="form-control" rows="2"></textarea></div>
+        <div class="form-group"><label>Tarikh Selesai</label><input type="date" id="r-tarikh-selesai" class="form-control"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-kerosakan')">Batal</button>
+      <button class="btn btn-primary" onclick="saveKerosakan()"><i class="fa-solid fa-floppy-disk"></i> Simpan Laporan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Pengguna -->
+<div class="modal-overlay" id="modal-pengguna">
+  <div class="modal-box modal-sm">
+    <div class="modal-header">
+      <h3 id="modal-user-title">Tambah Pengguna Baharu</h3>
+      <button class="modal-close" onclick="closeModal('modal-pengguna')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="user-edit-id">
+      <div class="form-group"><label>Nama Penuh <span style="color:var(--danger)">*</span></label><input type="text" id="u-nama" class="form-control"></div>
+      <div class="form-group"><label>Nama Pengguna <span style="color:var(--danger)">*</span></label><input type="text" id="u-username" class="form-control"></div>
+      <div class="form-group"><label>Kata Laluan <span style="color:var(--danger)">*</span></label><input type="password" id="u-password" class="form-control" placeholder="Kosongkan untuk kekal sama"></div>
+      <div class="form-group"><label>Peranan</label><select id="u-peranan" class="form-control"><option value="PAJ">PAJ (Pegawai Pengurusan Aset)</option><option value="KJ">KJ (Ketua Jabatan)</option><option value="PPJ">PPJ (Pegawai Penyelenggaraan)</option><option value="Penyelia BMB">Penyelia BMB</option><option value="PBMB">PBMB (Pengguna Bengkel/Makmal)</option></select></div>
+      <div class="form-group"><label>Bengkel / Makmal</label><select id="u-bengkel" class="form-control"><option value="">– Semua –</option><option>Bengkel Fitting</option><option>Bengkel Mesin</option><option>Bengkel CNC</option><option>Makmal Kawalan</option><option>Bengkel Projek</option></select></div>
+      <div class="form-group"><label>Status Akaun</label><select id="u-status" class="form-control"><option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pengguna')">Batal</button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Konfirmasi Padam -->
+<div class="modal-overlay" id="modal-konfirm">
+  <div class="modal-box modal-sm">
+    <div class="modal-header"><h3>Sahkan Pemadaman</h3><button class="modal-close" onclick="closeModal('modal-konfirm')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body"><p id="konfirm-msg">Adakah anda pasti ingin memadam rekod ini?</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Tindakan ini tidak boleh dibatalkan.</p></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('modal-konfirm')">Batal</button><button class="btn btn-danger" id="konfirm-btn">Padam</button></div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ══════════════════ JAVASCRIPT ══════════════════ -->
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STATE & CONSTANTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let currentUser = null;
+let activeLaporanTab = 'status';
+let chartStatusObj = null, chartBengkelObj = null, chartKerosakanObj = null, chartLaporanObj = null;
+const BENGKEL = ['Bengkel Fitting','Bengkel Mesin','Bengkel CNC','Makmal Kawalan','Bengkel Projek'];
+const ROLE_LABELS = { PAJ:'PAJ', KJ:'KJ', PPJ:'PPJ', 'Penyelia BMB':'Penyelia BMB', PBMB:'PBMB' };
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LOCAL STORAGE HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function getData(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch(e) { return []; } }
+function setData(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function getUsers() { return getData('jkm_users'); }
+function getAset() { return getData('jkm_aset'); }
+function getPemeriksaan() { return getData('jkm_pemeriksaan'); }
+function getKerosakan() { return getData('jkm_kerosakan'); }
+function getKalender() { try { return JSON.parse(localStorage.getItem('jkm_kalender')) || {}; } catch(e) { return {}; } }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SEED DATA
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function seedData() {
+  if (localStorage.getItem('jkm_seeded')) return;
+  const users = [
+    { id:'u1', nama:'Ahmad Faiz bin Hamdan', username:'paj_jkm', password:'psas2024', peranan:'PAJ', bengkel:'', status:'Aktif' },
+    { id:'u2', nama:'Dr. Roslan bin Kassim', username:'kj_jkm', password:'psas2024', peranan:'KJ', bengkel:'', status:'Aktif' },
+    { id:'u3', nama:'Mohd Hafiz bin Idris', username:'ppj_jkm', password:'psas2024', peranan:'PPJ', bengkel:'', status:'Aktif' },
+    { id:'u4', nama:'Norzaini binti Azhar', username:'sv_fitting', password:'psas2024', peranan:'Penyelia BMB', bengkel:'Bengkel Fitting', status:'Aktif' },
+    { id:'u5', nama:'Khairul Anwar bin Saat', username:'sv_mesin', password:'psas2024', peranan:'Penyelia BMB', bengkel:'Bengkel Mesin', status:'Aktif' },
+    { id:'u6', nama:'Siti Hajar binti Daud', username:'sv_cnc', password:'psas2024', peranan:'Penyelia BMB', bengkel:'Bengkel CNC', status:'Aktif' },
+    { id:'u7', nama:'Zulkifli bin Mahmud', username:'sv_kawalan', password:'psas2024', peranan:'Penyelia BMB', bengkel:'Makmal Kawalan', status:'Aktif' },
+    { id:'u8', nama:'Faridah binti Osman', username:'sv_projek', password:'psas2024', peranan:'Penyelia BMB', bengkel:'Bengkel Projek', status:'Aktif' }
+  ];
+  setData('jkm_users', users);
+
+  const today = new Date(); const yr = today.getFullYear();
+  const d = (y,m,day) => `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  const aset = [
+    { id:'a001', no_pendaftaran:'JKM/BF/001', nama_aset:'Mesin Pengisar Bangku', kategori:'Peralatan P&P', model:'Optimum BF20L', no_siri:'OPT-2019-001', tahun:2019, nilai:4500, bengkel:'Bengkel Fitting', lokasi_rekod:'Rak A1', lokasi_sebenar:'Rak A1', pegawai:'Ahmad Faiz', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,15), tarikh_selenggara:d(yr+1,1,15), catatan:'' },
+    { id:'a002', no_pendaftaran:'JKM/BF/002', nama_aset:'Pengirik Meja', kategori:'Peralatan P&P', model:'Bosch PBD 40', no_siri:'BSH-2020-005', tahun:2020, nilai:2800, bengkel:'Bengkel Fitting', lokasi_rekod:'Rak A2', lokasi_sebenar:'Rak A2', pegawai:'Ahmad Faiz', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,15), tarikh_selenggara:d(yr+1,2,10), catatan:'' },
+    { id:'a003', no_pendaftaran:'JKM/BF/003', nama_aset:'Set Perkakas Tangan', kategori:'Peralatan P&P', model:'Stanley 92-824', no_siri:'STN-2018-012', tahun:2018, nilai:850, bengkel:'Bengkel Fitting', lokasi_rekod:'Kabinet B1', lokasi_sebenar:'Kabinet B1', pegawai:'Norzaini Azhar', status:'Perlu Pembaikan', tarikh_periksa:d(yr,5,20), tarikh_selenggara:d(yr,12,1), catatan:'Beberapa peralatan perlu diganti' },
+    { id:'a004', no_pendaftaran:'JKM/BM/001', nama_aset:'Mesin Larik CNC', kategori:'Jentera', model:'Haas TL-1', no_siri:'HAS-2021-003', tahun:2021, nilai:85000, bengkel:'Bengkel Mesin', lokasi_rekod:'Lantai 1 Kiri', lokasi_sebenar:'Lantai 1 Kiri', pegawai:'Mohd Hafiz', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,20), tarikh_selenggara:d(yr+1,1,20), catatan:'' },
+    { id:'a005', no_pendaftaran:'JKM/BM/002', nama_aset:'Mesin Pengisar Sejagat', kategori:'Jentera', model:'Knuth FSU-3V', no_siri:'KNT-2019-007', tahun:2019, nilai:32000, bengkel:'Bengkel Mesin', lokasi_rekod:'Lantai 1 Kanan', lokasi_sebenar:'Lantai 1 Kanan', pegawai:'Mohd Hafiz', status:'Sedang Diselenggara', tarikh_periksa:d(yr,4,10), tarikh_selenggara:d(yr,11,30), catatan:'Sedang menunggu bahagian ganti' },
+    { id:'a006', no_pendaftaran:'JKM/BM/003', nama_aset:'Mesin Penggigit Logam', kategori:'Peralatan P&P', model:'Metabo BS 18 LTX', no_siri:'MET-2020-009', tahun:2020, nilai:1200, bengkel:'Bengkel Mesin', lokasi_rekod:'Rak C3', lokasi_sebenar:'Rak C3', pegawai:'Khairul Anwar', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,20), tarikh_selenggara:d(yr+1,3,1), catatan:'' },
+    { id:'a007', no_pendaftaran:'JKM/CNC/001', nama_aset:'Pusat Pemesinan CNC 3-Paksi', kategori:'Jentera', model:'Haas VF-2', no_siri:'HAS-2022-001', tahun:2022, nilai:120000, bengkel:'Bengkel CNC', lokasi_rekod:'Bilik CNC Utama', lokasi_sebenar:'Bilik CNC Utama', pegawai:'Siti Hajar', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,25), tarikh_selenggara:d(yr+1,1,25), catatan:'' },
+    { id:'a008', no_pendaftaran:'JKM/CNC/002', nama_aset:'Mesin Larik CNC 2-Paksi', kategori:'Jentera', model:'Haas ST-10', no_siri:'HAS-2022-002', tahun:2022, nilai:95000, bengkel:'Bengkel CNC', lokasi_rekod:'Bilik CNC Utama', lokasi_sebenar:'Bilik CNC Utama', pegawai:'Siti Hajar', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,25), tarikh_selenggara:d(yr+1,2,25), catatan:'' },
+    { id:'a009', no_pendaftaran:'JKM/CNC/003', nama_aset:'Perisian CAD/CAM', kategori:'ICT', model:'SolidWorks 2023', no_siri:'SW-2023-015', tahun:2023, nilai:18000, bengkel:'Bengkel CNC', lokasi_rekod:'Makmal Komputer CNC', lokasi_sebenar:'Makmal Komputer CNC', pegawai:'Siti Hajar', status:'Sedang Digunakan', tarikh_periksa:d(yr,3,15), tarikh_selenggara:d(yr+1,3,15), catatan:'Lesen tahunan perlu diperbaharui' },
+    { id:'a010', no_pendaftaran:'JKM/MK/001', nama_aset:'Kit Pneumatik Festo', kategori:'Peralatan P&P', model:'Festo TP101', no_siri:'FST-2020-022', tahun:2020, nilai:12000, bengkel:'Makmal Kawalan', lokasi_rekod:'Meja Makmal 1', lokasi_sebenar:'Meja Makmal 1', pegawai:'Zulkifli Mahmud', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,18), tarikh_selenggara:d(yr+1,1,18), catatan:'' },
+    { id:'a011', no_pendaftaran:'JKM/MK/002', nama_aset:'Kit Hidraulik Festo', kategori:'Peralatan P&P', model:'Festo TP201', no_siri:'FST-2020-023', tahun:2020, nilai:14500, bengkel:'Makmal Kawalan', lokasi_rekod:'Meja Makmal 2', lokasi_sebenar:'Meja Makmal 2', pegawai:'Zulkifli Mahmud', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,18), tarikh_selenggara:d(yr+1,1,18), catatan:'' },
+    { id:'a012', no_pendaftaran:'JKM/MK/003', nama_aset:'PLC Siemens S7-1200', kategori:'Peralatan P&P', model:'Siemens S7-1200', no_siri:'SIE-2021-008', tahun:2021, nilai:6500, bengkel:'Makmal Kawalan', lokasi_rekod:'Rak Kawalan', lokasi_sebenar:'Rak Kawalan', pegawai:'Zulkifli Mahmud', status:'Perlu Pembaikan', tarikh_periksa:d(yr,6,5), tarikh_selenggara:d(yr,11,1), catatan:'Output modul I/O rosak' },
+    { id:'a013', no_pendaftaran:'JKM/MK/004', nama_aset:'Papan Putih Interaktif', kategori:'ICT', model:'Smart Board 6065', no_siri:'SMB-2019-003', tahun:2019, nilai:8500, bengkel:'Makmal Kawalan', lokasi_rekod:'Hadapan Makmal', lokasi_sebenar:'Hadapan Makmal', pegawai:'Zulkifli Mahmud', status:'Tidak Digunakan', tarikh_periksa:d(yr,4,1), tarikh_selenggara:'', catatan:'Pen interaktif hilang' },
+    { id:'a014', no_pendaftaran:'JKM/BP/001', nama_aset:'Mesin Kimpalan MIG', kategori:'Peralatan P&P', model:'Lincoln Electric Powermig 210', no_siri:'LNC-2021-011', tahun:2021, nilai:5200, bengkel:'Bengkel Projek', lokasi_rekod:'Sudut Kimpalan', lokasi_sebenar:'Sudut Kimpalan', pegawai:'Faridah Osman', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,22), tarikh_selenggara:d(yr+1,2,1), catatan:'' },
+    { id:'a015', no_pendaftaran:'JKM/BP/002', nama_aset:'Mesin Kimpalan Aruk', kategori:'Peralatan P&P', model:'Lincoln Electric Flextec 350X', no_siri:'LNC-2021-012', tahun:2021, nilai:7800, bengkel:'Bengkel Projek', lokasi_rekod:'Sudut Kimpalan', lokasi_sebenar:'Sudut Kimpalan', pegawai:'Faridah Osman', status:'Cadangan Pelupusan', tarikh_periksa:d(yr,5,3), tarikh_selenggara:'', catatan:'Transformer rosak teruk, kos baiki melebihi nilai aset' },
+    { id:'a016', no_pendaftaran:'JKM/BP/003', nama_aset:'Mesin Canai Lantai', kategori:'Peralatan P&P', model:'Angle Grinder AG125', no_siri:'MTB-2018-004', tahun:2018, nilai:450, bengkel:'Bengkel Projek', lokasi_rekod:'Rak Alatan', lokasi_sebenar:'', pegawai:'Faridah Osman', status:'Hilang', tarikh_periksa:d(yr,3,10), tarikh_selenggara:'', catatan:'Tiada pada lokasi rekod semasa pemeriksaan Ogos' },
+    { id:'a017', no_pendaftaran:'JKM/BF/004', nama_aset:'Kerusi Pelajar', kategori:'Perabot', model:'Standard DP-201', no_siri:'', tahun:2017, nilai:180, bengkel:'Bengkel Fitting', lokasi_rekod:'Ruang Taklimat', lokasi_sebenar:'Ruang Taklimat', pegawai:'Norzaini Azhar', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,15), tarikh_selenggara:'', catatan:'30 unit' },
+    { id:'a018', no_pendaftaran:'JKM/BM/004', nama_aset:'Jangka Vernier Digital', kategori:'Peralatan P&P', model:'Mitutoyo 500-196-30', no_siri:'MIT-2022-030', tahun:2022, nilai:320, bengkel:'Bengkel Mesin', lokasi_rekod:'Kabinet Alat Ukur', lokasi_sebenar:'Kabinet Alat Ukur', pegawai:'Khairul Anwar', status:'Sedang Digunakan', tarikh_periksa:d(yr,8,20), tarikh_selenggara:'', catatan:'15 unit' }
+  ];
+  setData('jkm_aset', aset);
+
+  const kerosakan = [
+    { id:'k001', no_laporan:'KEW/2024/001', no_aset:'JKM/BF/003', nama_aset:'Set Perkakas Tangan', bengkel:'Bengkel Fitting', jenis:'Fizikal', keterangan:'Beberapa peralatan dalam set telah patah dan tidak boleh digunakan', dilaporkan:'Norzaini Azhar', tarikh:'2024-03-15', status:'Dalam Semakan', cadangan:'Perlu dipesan bahagian ganti dari pembekal asal', kelulusan:'Menunggu', tarikh_selesai:'' },
+    { id:'k002', no_laporan:'KEW/2024/002', no_aset:'JKM/BM/002', nama_aset:'Mesin Pengisar Sejagat', bengkel:'Bengkel Mesin', jenis:'Mekanikal', keterangan:'Bearing utama haus, bunyi bising semasa beroperasi', dilaporkan:'Khairul Anwar', tarikh:'2024-04-02', status:'Dihantar Baiki', cadangan:'Tukar bearing dan pengetat. Diserahkan kepada Syarikat ABC Engineering', kelulusan:'Diluluskan', tarikh_selesai:'' },
+    { id:'k003', no_laporan:'KEW/2024/003', no_aset:'JKM/MK/003', nama_aset:'PLC Siemens S7-1200', bengkel:'Makmal Kawalan', jenis:'Elektrik', keterangan:'Modul output 16DO tidak berfungsi, gagal menghantar isyarat ke aktuator', dilaporkan:'Zulkifli Mahmud', tarikh:'2024-05-10', status:'Baru', cadangan:'', kelulusan:'Menunggu', tarikh_selesai:'' },
+    { id:'k004', no_laporan:'KEW/2024/004', no_aset:'JKM/BP/002', nama_aset:'Mesin Kimpalan Aruk', bengkel:'Bengkel Projek', jenis:'Elektrik', keterangan:'Transformer utama terbakar, kos penggantian melebihi 80% nilai aset', dilaporkan:'Faridah Osman', tarikh:'2024-02-20', status:'Cadangan Pelupusan', cadangan:'Disyorkan untuk dilupuskan mengikut prosedur KEW.PA-10', kelulusan:'Diluluskan', tarikh_selesai:'' },
+    { id:'k005', no_laporan:'KEW/2024/005', no_aset:'JKM/MK/004', nama_aset:'Papan Putih Interaktif', bengkel:'Makmal Kawalan', jenis:'Lain-lain', keterangan:'Pen interaktif hilang, papan tidak dapat digunakan sepenuhnya', dilaporkan:'Zulkifli Mahmud', tarikh:'2024-01-25', status:'Selesai', cadangan:'Dipesan pen ganti dari pembekal. Telah diterima dan dipasang', kelulusan:'Diluluskan', tarikh_selesai:'2024-02-15' },
+    { id:'k006', no_laporan:'KEW/2024/006', no_aset:'JKM/CNC/001', nama_aset:'Pusat Pemesinan CNC', bengkel:'Bengkel CNC', jenis:'Mekanikal', keterangan:'Pendingin sejuk bocor, perlu pemeriksaan teknikal segera', dilaporkan:'Siti Hajar', tarikh:'2024-06-01', status:'Dalam Semakan', cadangan:'Sedang menunggu pengesahan daripada PPJ', kelulusan:'Menunggu', tarikh_selesai:'' },
+    { id:'k007', no_laporan:'KEW/2024/007', no_aset:'JKM/BP/001', nama_aset:'Mesin Kimpalan MIG', bengkel:'Bengkel Projek', jenis:'Elektrik', keterangan:'Wayar kuasa bocor, risikonya kepada keselamatan pelajar', dilaporkan:'Faridah Osman', tarikh:'2024-07-10', status:'Selesai', cadangan:'Wayar diganti oleh PPJ pada 15 Julai 2024', kelulusan:'Diluluskan', tarikh_selesai:'2024-07-15' },
+    { id:'k008', no_laporan:'KEW/2024/008', no_aset:'JKM/BM/001', nama_aset:'Mesin Larik CNC', bengkel:'Bengkel Mesin', jenis:'Hidraulik', keterangan:'Minyak hidraulik bocor pada paip utama', dilaporkan:'Khairul Anwar', tarikh:'2024-08-05', status:'Baru', cadangan:'', kelulusan:'Menunggu', tarikh_selesai:'' }
+  ];
+  setData('jkm_kerosakan', kerosakan);
+
+  const pemeriksaan = [
+    { id:'pe001', no_pemeriksaan:'PEM/2024/001', no_aset:'JKM/BF/001', nama_aset:'Mesin Pengisar Bangku', bengkel:'Bengkel Fitting', tarikh:'2024-08-15', keadaan:'Baik', fungsi:'Berfungsi', lokasi:'Rak A1', pemeriksa:'Ahmad Faiz', tindakan:'Tiada', catatan:'Dalam keadaan baik dan selamat digunakan' },
+    { id:'pe002', no_pemeriksaan:'PEM/2024/002', no_aset:'JKM/BF/002', nama_aset:'Pengirik Meja', bengkel:'Bengkel Fitting', tarikh:'2024-08-15', keadaan:'Baik', fungsi:'Berfungsi', lokasi:'Rak A2', pemeriksa:'Ahmad Faiz', tindakan:'Tiada', catatan:'' },
+    { id:'pe003', no_pemeriksaan:'PEM/2024/003', no_aset:'JKM/BF/003', nama_aset:'Set Perkakas Tangan', bengkel:'Bengkel Fitting', tarikh:'2024-08-15', keadaan:'Rosak Ringan', fungsi:'Berfungsi', lokasi:'Kabinet B1', pemeriksa:'Norzaini Azhar', tindakan:'Perlu Baiki', catatan:'Beberapa peralatan perlu diganti' },
+    { id:'pe004', no_pemeriksaan:'PEM/2024/004', no_aset:'JKM/BM/001', nama_aset:'Mesin Larik CNC', bengkel:'Bengkel Mesin', tarikh:'2024-08-20', keadaan:'Baik', fungsi:'Berfungsi', lokasi:'Lantai 1 Kiri', pemeriksa:'Ahmad Faiz', tindakan:'Tiada', catatan:'Penyelenggaraan berjadual pada Januari 2025' },
+    { id:'pe005', no_pemeriksaan:'PEM/2024/005', no_aset:'JKM/BM/002', nama_aset:'Mesin Pengisar Sejagat', bengkel:'Bengkel Mesin', tarikh:'2024-08-20', keadaan:'Rosak Teruk', fungsi:'Tidak Berfungsi', lokasi:'Lantai 1 Kanan', pemeriksa:'Ahmad Faiz', tindakan:'Perlu Baiki', catatan:'Bearing haus, sedang dalam pembaikan' },
+    { id:'pe006', no_pemeriksaan:'PEM/2024/006', no_aset:'JKM/CNC/001', nama_aset:'Pusat Pemesinan CNC 3-Paksi', bengkel:'Bengkel CNC', tarikh:'2024-08-25', keadaan:'Baik', fungsi:'Berfungsi', lokasi:'Bilik CNC Utama', pemeriksa:'Siti Hajar', tindakan:'Tiada', catatan:'Penyelenggaraan berkala dijalankan setiap 250 jam operasi' },
+    { id:'pe007', no_pemeriksaan:'PEM/2024/007', no_aset:'JKM/CNC/002', nama_aset:'Mesin Larik CNC 2-Paksi', bengkel:'Bengkel CNC', tarikh:'2024-08-25', keadaan:'Baik', fungsi:'Berfungsi', lokasi:'Bilik CNC Utama', pemeriksa:'Siti Hajar', tindakan:'Tiada', catatan:'' },
+    { id:'pe008', no_pemeriksaan:'PEM/2024/008', no_aset:'JKM/MK/001', nama_aset:'Kit Pneumatik Festo', bengkel:'Makmal Kawalan', tarikh:'2024-08-18', keadaan:'Baik', fungsi:'Berfungsi', lokasi:'Meja Makmal 1', pemeriksa:'Zulkifli Mahmud', tindakan:'Tiada', catatan:'' },
+    { id:'pe009', no_pemeriksaan:'PEM/2024/009', no_aset:'JKM/MK/003', nama_aset:'PLC Siemens S7-1200', bengkel:'Makmal Kawalan', tarikh:'2024-08-18', keadaan:'Rosak Ringan', fungsi:'Tidak Berfungsi', lokasi:'Rak Kawalan', pemeriksa:'Zulkifli Mahmud', tindakan:'Perlu Baiki', catatan:'Modul I/O output rosak' },
+    { id:'pe010', no_pemeriksaan:'PEM/2024/010', no_aset:'JKM/BP/001', nama_aset:'Mesin Kimpalan MIG', bengkel:'Bengkel Projek', tarikh:'2024-08-22', keadaan:'Baik', fungsi:'Berfungsi', lokasi:'Sudut Kimpalan', pemeriksa:'Faridah Osman', tindakan:'Tiada', catatan:'Selepas penggantian wayar kuasa' },
+    { id:'pe011', no_pemeriksaan:'PEM/2024/011', no_aset:'JKM/BP/002', nama_aset:'Mesin Kimpalan Aruk', bengkel:'Bengkel Projek', tarikh:'2024-08-22', keadaan:'Rosak Teruk', fungsi:'Tidak Berfungsi', lokasi:'Sudut Kimpalan', pemeriksa:'Faridah Osman', tindakan:'Cadang Pelupus', catatan:'Transformer rosak teruk, cadang pelupusan' }
+  ];
+  setData('jkm_pemeriksaan', pemeriksaan);
+  localStorage.setItem('jkm_seeded', '1');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// AUTH
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (!u || !p) { showLoginError('Sila masukkan nama pengguna dan kata laluan.'); return; }
+  const users = getUsers();
+  const user = users.find(x => x.username === u && x.password === p && x.status === 'Aktif');
+  if (!user) { showLoginError('Nama pengguna atau kata laluan tidak sah.'); return; }
+  currentUser = user;
+  sessionStorage.setItem('jkm_session', JSON.stringify(user));
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'block';
+  setupShell();
+  showPage('dashboard');
+}
+function doLogout() {
+  currentUser = null;
+  sessionStorage.removeItem('jkm_session');
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  document.getElementById('login-error-msg').textContent = msg;
+  el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.gap = '8px';
+}
+function setupShell() {
+  if (!currentUser) return;
+  document.getElementById('sidebar-name').textContent = currentUser.nama;
+  document.getElementById('sidebar-role').textContent = ROLE_LABELS[currentUser.peranan] || currentUser.peranan;
+  document.getElementById('sidebar-avatar').textContent = currentUser.nama.charAt(0).toUpperCase();
+  const isPAJ = currentUser.peranan === 'PAJ';
+  document.getElementById('nav-pengguna').style.display = isPAJ ? 'flex' : 'none';
+  document.getElementById('admin-section').style.display = isPAJ ? 'block' : 'none';
+  document.getElementById('btn-tambah-aset').style.display = isPAJ ? 'flex' : 'none';
+  updateNotifCount();
+}
+function updateNotifCount() {
+  const k = getKerosakan().filter(x => x.status === 'Baru').length;
+  const nb = document.getElementById('notif-count');
+  nb.textContent = k; nb.style.display = k > 0 ? 'flex' : 'none';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ROUTER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const pageTitles = { dashboard:'Dashboard Ringkasan', aset:'Pendaftaran Aset', pemeriksaan:'Pemeriksaan P&P', kerosakan:'Laporan Kerosakan', kalender:'Kalender Pemantauan', laporan:'Laporan & Analitik', pengguna:'Pengurusan Pengguna' };
+const pageBreadcrumb = { dashboard:'JKM PSAS › Dashboard', aset:'JKM PSAS › Pendaftaran Aset', pemeriksaan:'JKM PSAS › Pemeriksaan P&P', kerosakan:'JKM PSAS › Laporan Kerosakan', kalender:'JKM PSAS › Kalender', laporan:'JKM PSAS › Laporan', pengguna:'JKM PSAS › Pengurusan Pengguna' };
+function showPage(page) {
+  if (!currentUser) return;
+  if (page === 'pengguna' && currentUser.peranan !== 'PAJ') { showToast('Akses ditolak.', 'danger'); return; }
+  document.querySelectorAll('[id^="page-"]').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.remove('hidden');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('header-title').textContent = pageTitles[page] || page;
+  document.getElementById('header-breadcrumb').textContent = pageBreadcrumb[page] || '';
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'aset') renderAsetTable();
+  if (page === 'pemeriksaan') { renderPemeriksaanProgress(); renderPemeriksaanTable(); }
+  if (page === 'kerosakan') renderKerosakanTable();
+  if (page === 'kalender') renderKalender();
+  if (page === 'laporan') { renderLaporan(); }
+  if (page === 'pengguna') renderUserTable();
+  updateNotifCount();
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DASHBOARD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function renderDashboard() {
+  const aset = getAset(); const kerosakan = getKerosakan(); const periksa = getPemeriksaan();
+  const now = new Date(); const today = now.toISOString().split('T')[0];
+  const stats = {
+    jumlah: aset.length,
+    digunakan: aset.filter(a => a.status === 'Sedang Digunakan').length,
+    tidakDigunakan: aset.filter(a => a.status === 'Tidak Digunakan').length,
+    perluPembaikan: aset.filter(a => a.status === 'Perlu Pembaikan').length,
+    diselenggara: aset.filter(a => a.status === 'Sedang Diselenggara').length,
+    pelupusan: aset.filter(a => a.status === 'Cadangan Pelupusan').length,
+    hilang: aset.filter(a => a.status === 'Hilang').length,
+    tertunggak: aset.filter(a => a.tarikh_selenggara && a.tarikh_selenggara < today).length,
+    kerosakanBelumSelesai: kerosakan.filter(k => k.status !== 'Selesai').length,
+    borangTidakLengkap: aset.filter(a => !a.tarikh_periksa).length
+  };
+  document.getElementById('dash-date').textContent = 'Tarikh: ' + now.toLocaleDateString('ms-MY', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const cards = [
+    { label:'Jumlah Aset', val:stats.jumlah, icon:'fa-box-archive', color:'#1a3a6b', bg:'#dbeafe', sub:'Keseluruhan aset berdaftar' },
+    { label:'Sedang Digunakan', val:stats.digunakan, icon:'fa-circle-check', color:'#15803d', bg:'#dcfce7', sub:'Aktif & beroperasi' },
+    { label:'Tidak Digunakan', val:stats.tidakDigunakan, icon:'fa-circle-xmark', color:'#64748b', bg:'#f1f5f9', sub:'Tidak beroperasi' },
+    { label:'Perlu Pembaikan', val:stats.perluPembaikan, icon:'fa-wrench', color:'#b45309', bg:'#fef3c7', sub:'Memerlukan tindakan' },
+    { label:'Sedang Diselenggara', val:stats.diselenggara, icon:'fa-screwdriver-wrench', color:'#4338ca', bg:'#e0e7ff', sub:'Dalam proses selenggara' },
+    { label:'Cadangan Pelupusan', val:stats.pelupusan, icon:'fa-trash-can', color:'#b91c1c', bg:'#fee2e2', sub:'Menunggu kelulusan' },
+    { label:'Hilang', val:stats.hilang, icon:'fa-circle-question', color:'#be185d', bg:'#fce7f3', sub:'Tiada di lokasi rekod' }
+  ];
+  document.getElementById('summary-cards').innerHTML = cards.map(c => `
+    <div class="stat-card" style="border-left-color:${c.color};">
+      <div class="sc-top">
+        <div><div class="sc-label">${c.label}</div><div class="sc-value" style="color:${c.color}">${c.val}</div></div>
+        <div class="sc-icon" style="background:${c.bg};color:${c.color}"><i class="fa-solid ${c.icon}"></i></div>
+      </div>
+      <div class="sc-sub">${c.sub}</div>
+    </div>`).join('');
+  const alerts = [
+    { label:'Selenggara Tertunggak', val:stats.tertunggak, icon:'fa-clock', color:'#b45309', bc:'var(--warning)' },
+    { label:'Kerosakan Belum Selesai', val:stats.kerosakanBelumSelesai, icon:'fa-triangle-exclamation', color:'#b91c1c', bc:'var(--danger)' },
+    { label:'Borang Kualiti Tidak Lengkap', val:stats.borangTidakLengkap, icon:'fa-file-circle-xmark', color:'#4338ca', bc:'var(--purple)' }
+  ];
+  document.getElementById('alert-cards').innerHTML = alerts.map(a => `
+    <div class="alert-card" style="border-left-color:${a.bc};">
+      <div class="ac-icon" style="color:${a.color}"><i class="fa-solid ${a.icon}"></i></div>
+      <div><div class="ac-val" style="color:${a.color}">${a.val}</div><div class="ac-lbl">${a.label}</div></div>
+    </div>`).join('');
+  // Charts
+  destroyChart('chartStatusObj'); destroyChart('chartBengkelObj'); destroyChart('chartKerosakanObj');
+  const statusLabels = ['Digunakan','Tidak Digunakan','Perlu Pembaikan','Diselenggara','Cadangan Pelupusan','Hilang'];
+  const statusData = [stats.digunakan,stats.tidakDigunakan,stats.perluPembaikan,stats.diselenggara,stats.pelupusan,stats.hilang];
+  const statusColors = ['#16a34a','#94a3b8','#d97706','#4338ca','#dc2626','#be185d'];
+  chartStatusObj = new Chart(document.getElementById('chartStatus'), { type:'doughnut', data:{ labels:statusLabels, datasets:[{data:statusData,backgroundColor:statusColors,borderWidth:2}]}, options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}});
+  const bengkelCounts = BENGKEL.map(b => aset.filter(a => a.bengkel === b).length);
+  chartBengkelObj = new Chart(document.getElementById('chartBengkel'), { type:'bar', data:{ labels:BENGKEL.map(b=>b.replace('Bengkel ','B. ').replace('Makmal ','Mkl. ')), datasets:[{label:'Bilangan Aset',data:bengkelCounts,backgroundColor:'rgba(26,58,107,0.75)',borderRadius:5}]}, options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+  const months=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis'];
+  const curYear = now.getFullYear();
+  const kData = months.map((_,i) => kerosakan.filter(k => { const d=new Date(k.tarikh); return d.getFullYear()===curYear&&d.getMonth()===i; }).length);
+  chartKerosakanObj = new Chart(document.getElementById('chartKerosakan'), { type:'bar', data:{ labels:months, datasets:[{label:'Kerosakan',data:kData,backgroundColor:'rgba(220,38,38,0.7)',borderRadius:4}]}, options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+  // Bengkel summary table
+  const tbody = document.querySelector('#tbl-bengkel-summary tbody');
+  tbody.innerHTML = BENGKEL.map(b => {
+    const ba = aset.filter(a => a.bengkel === b);
+    const jml = ba.length, guna = ba.filter(a=>a.status==='Sedang Digunakan').length, tidak=ba.filter(a=>a.status==='Tidak Digunakan').length, baiki=ba.filter(a=>a.status==='Perlu Pembaikan').length, sel=ba.filter(a=>a.status==='Sedang Diselenggara').length, hil=ba.filter(a=>a.status==='Hilang').length;
+    return `<tr><td class="fw-bold">${b}</td><td>${jml}</td><td style="color:var(--success)">${guna}</td><td style="color:var(--text-muted)">${tidak}</td><td style="color:var(--warning)">${baiki}</td><td style="color:var(--purple)">${sel}</td><td style="color:var(--danger)">${hil}</td></tr>`;
+  }).join('');
+  // Tindakan segera
+  const items = [];
+  kerosakan.filter(k=>k.status==='Baru').forEach(k => items.push({ icon:'fa-triangle-exclamation', color:'var(--danger)', text:`Laporan kerosakan <strong>${k.no_laporan}</strong> — ${k.nama_aset} (${k.bengkel}) memerlukan semakan segera` }));
+  aset.filter(a=>a.tarikh_selenggara&&a.tarikh_selenggara<today).forEach(a => items.push({ icon:'fa-clock', color:'var(--warning)', text:`Penyelenggaraan <strong>${a.no_pendaftaran}</strong> — ${a.nama_aset} telah tertunggak` }));
+  aset.filter(a=>a.status==='Hilang').forEach(a => items.push({ icon:'fa-circle-question', color:'var(--danger)', text:`Aset <strong>${a.no_pendaftaran}</strong> — ${a.nama_aset} dilaporkan hilang. Sila siasat.` }));
+  document.getElementById('tindakan-segera').innerHTML = items.length === 0
+    ? '<div class="empty-state"><i class="fa-regular fa-circle-check" style="color:var(--success);"></i><p>Tiada tindakan segera diperlukan.</p></div>'
+    : '<div style="display:flex;flex-direction:column;gap:10px;">' + items.map(it=>`<div style="display:flex;align-items:flex-start;gap:12px;padding:10px 14px;background:#f8faff;border-radius:8px;border-left:3px solid ${it.color}"><i class="fa-solid ${it.icon}" style="color:${it.color};margin-top:3px;flex-shrink:0;"></i><span style="font-size:13px;">${it.text}</span></div>`).join('') + '</div>';
+}
+function destroyChart(name) { if (window[name]) { window[name].destroy(); window[name]=null; } }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ASET MODULE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function statusBadge(s) {
+  const m = { 'Sedang Digunakan':'badge-digunakan','Tidak Digunakan':'badge-tidak','Perlu Pembaikan':'badge-pembaikan','Sedang Diselenggara':'badge-selenggara','Cadangan Pelupusan':'badge-pelupusan','Hilang':'badge-hilang' };
+  return `<span class="badge ${m[s]||''}">${s}</span>`;
+}
+function renderAsetTable() {
+  const aset = getAset();
+  const q = document.getElementById('aset-search').value.toLowerCase();
+  const fB = document.getElementById('aset-filter-bengkel').value;
+  const fK = document.getElementById('aset-filter-kategori').value;
+  const fS = document.getElementById('aset-filter-status').value;
+  const filtered = aset.filter(a =>
+    (!q || a.no_pendaftaran.toLowerCase().includes(q) || a.nama_aset.toLowerCase().includes(q)) &&
+    (!fB || a.bengkel === fB) && (!fK || a.kategori === fK) && (!fS || a.status === fS)
+  );
+  document.getElementById('aset-count').textContent = `Menunjukkan ${filtered.length} daripada ${aset.length} rekod`;
+  const canEdit = ['PAJ'].includes(currentUser.peranan);
+  document.getElementById('aset-tbody').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="8" class="text-center text-muted" style="padding:30px;">Tiada rekod aset dijumpai.</td></tr>'
+    : filtered.map((a, i) => `
+      <tr>
+        <td style="color:var(--text-muted)">${i+1}</td>
+        <td><strong style="color:var(--primary)">${a.no_pendaftaran}</strong></td>
+        <td>${a.nama_aset}</td>
+        <td><span style="font-size:12px;color:var(--text-muted)">${a.kategori}</span></td>
+        <td>${a.bengkel}</td>
+        <td>${statusBadge(a.status)}</td>
+        <td style="font-size:12px;">${a.tarikh_periksa || '<span style="color:var(--danger)">Belum diperiksa</span>'}</td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-sm btn-secondary btn-icon" onclick="viewAset('${a.id}')" title="Lihat Butiran"><i class="fa-solid fa-eye"></i></button>
+            ${canEdit ? `<button class="btn btn-sm btn-primary btn-icon" onclick="openAsetModal('${a.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger btn-icon" onclick="confirmDelete('aset','${a.id}','${a.no_pendaftaran}')" title="Padam"><i class="fa-solid fa-trash"></i></button>` : ''}
+          </div>
+        </td>
+      </tr>`).join('');
+}
+function openAsetModal(id) {
+  const modal = document.getElementById('modal-aset');
+  document.getElementById('aset-edit-id').value = id || '';
+  if (id) {
+    const a = getAset().find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('modal-aset-title').textContent = 'Edit Aset — ' + a.no_pendaftaran;
+    ['no_pendaftaran','nama_aset','kategori','model','no_siri','bengkel','lokasi_rekod','lokasi_sebenar','pegawai','status','catatan'].forEach(f => {
+      const el = document.getElementById('a-' + f); if(el) el.value = a[f] || '';
+    });
+    document.getElementById('a-tahun').value = a.tahun || '';
+    document.getElementById('a-nilai').value = a.nilai || '';
+    document.getElementById('a-tarikh_periksa').value = a.tarikh_periksa || '';
+    document.getElementById('a-tarikh_selenggara').value = a.tarikh_selenggara || '';
+  } else {
+    document.getElementById('modal-aset-title').textContent = 'Tambah Aset Baharu';
+    document.getElementById('modal-aset').querySelectorAll('input,select,textarea').forEach(el => { if(el.id !== 'aset-edit-id') el.value = ''; });
+    document.getElementById('a-kategori').value = 'Peralatan P&P';
+    document.getElementById('a-bengkel').value = 'Bengkel Fitting';
+    document.getElementById('a-status').value = 'Sedang Digunakan';
+  }
+  showModal('modal-aset');
+}
+function saveAset() {
+  const no = document.getElementById('a-no_pendaftaran').value.trim();
+  const nama = document.getElementById('a-nama_aset').value.trim();
+  if (!no || !nama) { showToast('Sila isikan medan wajib.', 'danger'); return; }
+  const aset = getAset();
+  const editId = document.getElementById('aset-edit-id').value;
+  if (!editId && aset.find(a => a.no_pendaftaran === no)) { showToast('No. pendaftaran ini sudah wujud.', 'danger'); return; }
+  const obj = {
+    id: editId || 'a' + Date.now(),
+    no_pendaftaran: no, nama_aset: nama,
+    kategori: document.getElementById('a-kategori').value,
+    model: document.getElementById('a-model').value,
+    no_siri: document.getElementById('a-no_siri').value,
+    tahun: document.getElementById('a-tahun').value,
+    nilai: document.getElementById('a-nilai').value,
+    bengkel: document.getElementById('a-bengkel').value,
+    lokasi_rekod: document.getElementById('a-lokasi_rekod').value,
+    lokasi_sebenar: document.getElementById('a-lokasi_sebenar').value,
+    pegawai: document.getElementById('a-pegawai').value,
+    status: document.getElementById('a-status').value,
+    tarikh_periksa: document.getElementById('a-tarikh_periksa').value,
+    tarikh_selenggara: document.getElementById('a-tarikh_selenggara').value,
+    catatan: document.getElementById('a-catatan').value
+  };
+  if (editId) {
+    const idx = aset.findIndex(a => a.id === editId); aset[idx] = obj;
+  } else { aset.push(obj); }
+  setData('jkm_aset', aset);
+  closeModal('modal-aset'); renderAsetTable();
+  showToast(editId ? 'Rekod aset telah dikemaskini.' : 'Aset baharu telah didaftarkan.', 'success');
+}
+function viewAset(id) {
+  const a = getAset().find(x => x.id === id); if (!a) return;
+  const html = `
+    <div class="section-title">Maklumat Asas</div>
+    <div class="info-row">
+      <div class="info-item"><div class="info-label">No. Pendaftaran</div><div class="info-value fw-bold" style="color:var(--primary)">${a.no_pendaftaran}</div></div>
+      <div class="info-item"><div class="info-label">Nama Aset</div><div class="info-value">${a.nama_aset}</div></div>
+      <div class="info-item"><div class="info-label">Kategori</div><div class="info-value">${a.kategori}</div></div>
+      <div class="info-item"><div class="info-label">Model / Jenama</div><div class="info-value">${a.model||'–'}</div></div>
+      <div class="info-item"><div class="info-label">No. Siri</div><div class="info-value">${a.no_siri||'–'}</div></div>
+      <div class="info-item"><div class="info-label">Tahun Perolehan</div><div class="info-value">${a.tahun||'–'}</div></div>
+      <div class="info-item"><div class="info-label">Nilai Aset (RM)</div><div class="info-value">${a.nilai ? 'RM ' + parseFloat(a.nilai).toLocaleString('ms-MY',{minimumFractionDigits:2}) : '–'}</div></div>
+      <div class="info-item"><div class="info-label">Status Semasa</div><div class="info-value">${statusBadge(a.status)}</div></div>
+    </div>
+    <div class="info-divider"></div>
+    <div class="section-title">Lokasi &amp; Tanggungjawab</div>
+    <div class="info-row">
+      <div class="info-item"><div class="info-label">Bengkel / Makmal</div><div class="info-value">${a.bengkel}</div></div>
+      <div class="info-item"><div class="info-label">Lokasi Rekod (KEW)</div><div class="info-value">${a.lokasi_rekod||'–'}</div></div>
+      <div class="info-item"><div class="info-label">Lokasi Sebenar</div><div class="info-value">${a.lokasi_sebenar||'–'}</div></div>
+      <div class="info-item"><div class="info-label">Pegawai Bertanggungjawab</div><div class="info-value">${a.pegawai||'–'}</div></div>
+    </div>
+    <div class="info-divider"></div>
+    <div class="section-title">Pemeriksaan &amp; Penyelenggaraan</div>
+    <div class="info-row">
+      <div class="info-item"><div class="info-label">Tarikh Pemeriksaan Terakhir</div><div class="info-value">${a.tarikh_periksa||'<span style="color:var(--danger)">Belum diperiksa</span>'}</div></div>
+      <div class="info-item"><div class="info-label">Tarikh Selenggara Seterusnya</div><div class="info-value">${a.tarikh_selenggara||'–'}</div></div>
+    </div>
+    ${a.catatan ? `<div class="info-divider"></div><div class="section-title">Catatan</div><p style="font-size:13px;">${a.catatan}</p>` : ''}`;
+  document.getElementById('modal-aset-detail-body').innerHTML = html;
+  showModal('modal-aset-detail');
+}
+function confirmDelete(type, id, label) {
+  document.getElementById('konfirm-msg').innerHTML = `Adakah anda pasti ingin memadam rekod <strong>${label}</strong>?`;
+  document.getElementById('konfirm-btn').onclick = () => { deleteRecord(type, id); closeModal('modal-konfirm'); };
+  showModal('modal-konfirm');
+}
+function deleteRecord(type, id) {
+  if (type === 'aset') { setData('jkm_aset', getAset().filter(a=>a.id!==id)); renderAsetTable(); showToast('Rekod aset telah dipadam.', 'warning'); }
+  if (type === 'pemeriksaan') { setData('jkm_pemeriksaan', getPemeriksaan().filter(a=>a.id!==id)); renderPemeriksaanProgress(); renderPemeriksaanTable(); showToast('Rekod pemeriksaan telah dipadam.', 'warning'); }
+  if (type === 'kerosakan') { setData('jkm_kerosakan', getKerosakan().filter(a=>a.id!==id)); renderKerosakanTable(); showToast('Laporan kerosakan telah dipadam.', 'warning'); }
+  if (type === 'user') { setData('jkm_users', getUsers().filter(a=>a.id!==id)); renderUserTable(); showToast('Pengguna telah dipadam.', 'warning'); }
+}
+function exportAsetExcel() {
+  const aset = getAset();
+  const rows = [['No.','No. Pendaftaran','Nama Aset','Kategori','Model','No. Siri','Tahun','Nilai (RM)','Bengkel','Lokasi Rekod','Lokasi Sebenar','Pegawai','Status','Tarikh Pemeriksaan','Tarikh Selenggara','Catatan']];
+  aset.forEach((a,i) => rows.push([i+1,a.no_pendaftaran,a.nama_aset,a.kategori,a.model||'',a.no_siri||'',a.tahun||'',a.nilai||'',a.bengkel,a.lokasi_rekod||'',a.lokasi_sebenar||'',a.pegawai||'',a.status,a.tarikh_periksa||'',a.tarikh_selenggara||'',a.catatan||'']));
+  exportXlsx(rows, 'Senarai_Aset_JKM_PSAS');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PEMERIKSAAN MODULE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function renderPemeriksaanProgress() {
+  const aset = getAset(); const periksa = getPemeriksaan();
+  const periksedIds = new Set(periksa.map(p => p.no_aset));
+  const html = BENGKEL.map(b => {
+    const ba = aset.filter(a => a.bengkel === b);
+    const total = ba.length;
+    const done = ba.filter(a => periksedIds.has(a.no_pendaftaran)).length;
+    const pct = total > 0 ? Math.round((done/total)*100) : 0;
+    const color = pct===100?'var(--success)':pct>=50?'var(--warning)':'var(--danger)';
+    return `<div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <span style="font-size:13px;font-weight:600;">${b}</span>
+        <span style="font-size:12px;color:${color};font-weight:700;">${done}/${total} aset (${pct}%)</span>
+      </div>
+      <div class="progress"><div class="progress-bar" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('pemeriksaan-progress').innerHTML = html;
+}
+function renderPemeriksaanTable() {
+  const periksa = getPemeriksaan();
+  const fB = document.getElementById('periksa-filter-bengkel').value;
+  const filtered = fB ? periksa.filter(p=>p.bengkel===fB) : periksa;
+  const canEdit = ['PAJ','PPJ','Penyelia BMB'].includes(currentUser.peranan);
+  const keadaanBadge = k => { const m={'Baik':'badge-digunakan','Rosak Ringan':'badge-pembaikan','Rosak Teruk':'badge-pelupusan'}; return `<span class="badge ${m[k]||''}">${k}</span>`; };
+  const tindakanBadge = t => { const m={'Tiada':'badge-digunakan','Perlu Baiki':'badge-pembaikan','Cadang Pelupus':'badge-pelupusan'}; return `<span class="badge ${m[t]||''}">${t}</span>`; };
+  document.getElementById('pemeriksaan-tbody').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="10" class="text-center text-muted" style="padding:30px;">Tiada rekod pemeriksaan.</td></tr>'
+    : filtered.map((p,i) => `<tr>
+        <td>${i+1}</td><td><strong style="color:var(--primary)">${p.no_pemeriksaan}</strong></td><td>${p.no_aset}</td><td>${p.nama_aset}</td><td>${p.bengkel}</td>
+        <td>${keadaanBadge(p.keadaan)}</td><td>${p.fungsi==='Berfungsi'?'<span style="color:var(--success)">✓ Berfungsi</span>':'<span style="color:var(--danger)">✗ Tidak'}</td>
+        <td>${tindakanBadge(p.tindakan)}</td><td style="font-size:12px">${p.tarikh}</td>
+        <td><div class="btn-group">
+          ${canEdit?`<button class="btn btn-sm btn-primary btn-icon" onclick="openPemeriksaanModal('${p.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>`:''}
+          ${currentUser.peranan==='PAJ'?`<button class="btn btn-sm btn-danger btn-icon" onclick="confirmDelete('pemeriksaan','${p.id}','${p.no_pemeriksaan}')" title="Padam"><i class="fa-solid fa-trash"></i></button>`:''}
+        </div></td>
+      </tr>`).join('');
+}
+function openPemeriksaanModal(id) {
+  document.getElementById('periksa-edit-id').value = id || '';
+  const today = new Date().toISOString().split('T')[0];
+  if (id) {
+    const p = getPemeriksaan().find(x=>x.id===id); if(!p) return;
+    document.getElementById('modal-periksa-title').textContent = 'Edit Rekod — ' + p.no_pemeriksaan;
+    document.getElementById('p-no_aset').value = p.no_aset;
+    document.getElementById('p-nama_aset').value = p.nama_aset;
+    document.getElementById('p-bengkel').value = p.bengkel;
+    document.getElementById('p-tarikh').value = p.tarikh;
+    document.getElementById('p-keadaan').value = p.keadaan;
+    document.getElementById('p-fungsi').value = p.fungsi;
+    document.getElementById('p-lokasi').value = p.lokasi;
+    document.getElementById('p-pemeriksa').value = p.pemeriksa;
+    document.getElementById('p-tindakan').value = p.tindakan;
+    document.getElementById('p-catatan').value = p.catatan;
+  } else {
+    document.getElementById('modal-periksa-title').textContent = 'Rekod Pemeriksaan Baharu';
+    document.getElementById('modal-pemeriksaan').querySelectorAll('input,select,textarea').forEach(el => { if(el.id!=='periksa-edit-id') el.value=''; });
+    document.getElementById('p-tarikh').value = today;
+    document.getElementById('p-keadaan').value = 'Baik';
+    document.getElementById('p-fungsi').value = 'Berfungsi';
+    document.getElementById('p-tindakan').value = 'Tiada';
+    document.getElementById('p-pemeriksa').value = currentUser.nama;
+    document.getElementById('p-bengkel').value = currentUser.bengkel || 'Bengkel Fitting';
+  }
+  showModal('modal-pemeriksaan');
+}
+function savePemeriksaan() {
+  const noAset = document.getElementById('p-no_aset').value.trim(); if (!noAset) { showToast('Sila masukkan no. aset.','danger'); return; }
+  const periksa = getPemeriksaan(); const editId = document.getElementById('periksa-edit-id').value;
+  const obj = { id:editId||'pe'+Date.now(), no_pemeriksaan:editId?periksa.find(x=>x.id===editId).no_pemeriksaan:'PEM/'+new Date().getFullYear()+'/'+String(periksa.length+1).padStart(3,'0'), no_aset:noAset, nama_aset:document.getElementById('p-nama_aset').value, bengkel:document.getElementById('p-bengkel').value, tarikh:document.getElementById('p-tarikh').value, keadaan:document.getElementById('p-keadaan').value, fungsi:document.getElementById('p-fungsi').value, lokasi:document.getElementById('p-lokasi').value, pemeriksa:document.getElementById('p-pemeriksa').value, tindakan:document.getElementById('p-tindakan').value, catatan:document.getElementById('p-catatan').value };
+  if (editId) { const idx=periksa.findIndex(x=>x.id===editId); periksa[idx]=obj; } else { periksa.push(obj); }
+  setData('jkm_pemeriksaan', periksa);
+  closeModal('modal-pemeriksaan'); renderPemeriksaanProgress(); renderPemeriksaanTable();
+  showToast('Rekod pemeriksaan telah disimpan.','success');
+}
+function exportPemeriksaanExcel() {
+  const rows = [['No.','No. Pemeriksaan','No. Aset','Nama Aset','Bengkel','Keadaan Fizikal','Fungsi','Lokasi Periksa','Pemeriksa','Status Tindakan','Catatan','Tarikh']];
+  getPemeriksaan().forEach((p,i) => rows.push([i+1,p.no_pemeriksaan,p.no_aset,p.nama_aset,p.bengkel,p.keadaan,p.fungsi,p.lokasi,p.pemeriksa,p.tindakan,p.catatan,p.tarikh]));
+  exportXlsx(rows,'Rekod_Pemeriksaan_PdP_JKM_PSAS');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// KEROSAKAN MODULE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function kerosakanBadge(s) {
+  const m={'Baru':'badge-baru','Dalam Semakan':'badge-semakan','Dihantar Baiki':'badge-baiki','Selesai':'badge-selesai','Cadangan Pelupusan':'badge-pelupusan'};
+  return `<span class="badge ${m[s]||''}">${s}</span>`;
+}
+function renderKerosakanTable() {
+  const ker = getKerosakan();
+  const fB = document.getElementById('rosak-filter-bengkel').value;
+  const fS = document.getElementById('rosak-filter-status').value;
+  const fD = document.getElementById('rosak-filter-dari').value;
+  const fH = document.getElementById('rosak-filter-hingga').value;
+  const filtered = ker.filter(k =>
+    (!fB||k.bengkel===fB) && (!fS||k.status===fS) &&
+    (!fD||k.tarikh>=fD) && (!fH||k.tarikh<=fH)
+  );
+  document.getElementById('rosak-count').textContent = `Menunjukkan ${filtered.length} daripada ${ker.length} laporan`;
+  const canAct = ['PAJ','KJ'].includes(currentUser.peranan);
+  document.getElementById('kerosakan-tbody').innerHTML = filtered.length === 0
+    ? '<tr><td colspan="10" class="text-center text-muted" style="padding:30px;">Tiada laporan kerosakan.</td></tr>'
+    : filtered.map((k,i)=>`<tr>
+        <td>${i+1}</td><td><strong style="color:var(--primary)">${k.no_laporan}</strong></td><td style="font-size:12px">${k.no_aset}</td><td>${k.nama_aset}</td><td>${k.bengkel}</td>
+        <td style="font-size:12px">${k.jenis}</td><td>${kerosakanBadge(k.status)}</td><td style="font-size:12px">${k.dilaporkan}</td><td style="font-size:12px">${k.tarikh}</td>
+        <td><div class="btn-group">
+          <button class="btn btn-sm btn-secondary btn-icon" onclick="viewKerosakan('${k.id}')" title="Lihat Butiran"><i class="fa-solid fa-eye"></i></button>
+          ${canAct?`<button class="btn btn-sm btn-primary btn-icon" onclick="openKerosakanModal('${k.id}')" title="Kemaskini"><i class="fa-solid fa-pen"></i></button>`:''}
+          ${currentUser.peranan==='PAJ'?`<button class="btn btn-sm btn-danger btn-icon" onclick="confirmDelete('kerosakan','${k.id}','${k.no_laporan}')" title="Padam"><i class="fa-solid fa-trash"></i></button>`:''}
+        </div></td>
+      </tr>`).join('');
+}
+function openKerosakanModal(id) {
+  document.getElementById('rosak-edit-id').value = id || '';
+  const today = new Date().toISOString().split('T')[0];
+  const isPAJKJ = ['PAJ','KJ'].includes(currentUser.peranan);
+  document.getElementById('rosak-tindakan-section').style.display = (id && isPAJKJ) ? 'block' : 'none';
+  if (id) {
+    const k = getKerosakan().find(x=>x.id===id); if(!k) return;
+    document.getElementById('modal-rosak-title').textContent = 'Kemaskini Laporan — ' + k.no_laporan;
+    document.getElementById('r-no_aset').value=k.no_aset; document.getElementById('r-nama_aset').value=k.nama_aset;
+    document.getElementById('r-bengkel').value=k.bengkel; document.getElementById('r-jenis').value=k.jenis;
+    document.getElementById('r-keterangan').value=k.keterangan; document.getElementById('r-dilaporkan').value=k.dilaporkan;
+    document.getElementById('r-tarikh').value=k.tarikh; document.getElementById('r-status').value=k.status;
+    document.getElementById('r-kelulusan').value=k.kelulusan; document.getElementById('r-cadangan').value=k.cadangan||'';
+    document.getElementById('r-tarikh-selesai').value=k.tarikh_selesai||'';
+  } else {
+    document.getElementById('modal-rosak-title').textContent = 'Laporan Kerosakan Baharu';
+    document.getElementById('modal-kerosakan').querySelectorAll('input,select,textarea').forEach(el=>{if(el.id!=='rosak-edit-id')el.value='';});
+    document.getElementById('r-tarikh').value=today;
+    document.getElementById('r-bengkel').value=currentUser.bengkel||'Bengkel Fitting';
+    document.getElementById('r-dilaporkan').value=currentUser.nama;
+    document.getElementById('r-status').value='Baru';
+    document.getElementById('r-kelulusan').value='Menunggu';
+  }
+  showModal('modal-kerosakan');
+}
+function saveKerosakan() {
+  const noAset=document.getElementById('r-no_aset').value.trim(); const ket=document.getElementById('r-keterangan').value.trim();
+  if(!noAset||!ket){showToast('Sila isikan medan wajib.','danger');return;}
+  const ker=getKerosakan(); const editId=document.getElementById('rosak-edit-id').value;
+  const obj={id:editId||'k'+Date.now(),no_laporan:editId?ker.find(x=>x.id===editId).no_laporan:'KEW/'+new Date().getFullYear()+'/'+String(ker.length+1).padStart(3,'0'),
+    no_aset:noAset,nama_aset:document.getElementById('r-nama_aset').value,bengkel:document.getElementById('r-bengkel').value,
+    jenis:document.getElementById('r-jenis').value,keterangan:ket,dilaporkan:document.getElementById('r-dilaporkan').value,
+    tarikh:document.getElementById('r-tarikh').value,status:document.getElementById('r-status').value,
+    cadangan:document.getElementById('r-cadangan').value,kelulusan:document.getElementById('r-kelulusan').value,
+    tarikh_selesai:document.getElementById('r-tarikh-selesai').value};
+  if(editId){const idx=ker.findIndex(x=>x.id===editId);ker[idx]=obj;}else{ker.push(obj);}
+  setData('jkm_kerosakan',ker); closeModal('modal-kerosakan'); renderKerosakanTable(); updateNotifCount();
+  showToast(editId?'Laporan kerosakan dikemaskini.':'Laporan kerosakan telah dihantar.','success');
+}
+function viewKerosakan(id) {
+  const k=getKerosakan().find(x=>x.id===id); if(!k) return;
+  const html=`<div class="info-row">
+    <div class="info-item"><div class="info-label">No. Laporan</div><div class="info-value fw-bold" style="color:var(--primary)">${k.no_laporan}</div></div>
+    <div class="info-item"><div class="info-label">Status</div><div class="info-value">${kerosakanBadge(k.status)}</div></div>
+    <div class="info-item"><div class="info-label">No. Aset</div><div class="info-value">${k.no_aset}</div></div>
+    <div class="info-item"><div class="info-label">Nama Aset</div><div class="info-value">${k.nama_aset}</div></div>
+    <div class="info-item"><div class="info-label">Bengkel</div><div class="info-value">${k.bengkel}</div></div>
+    <div class="info-item"><div class="info-label">Jenis Kerosakan</div><div class="info-value">${k.jenis}</div></div>
+  </div>
+  <div class="info-divider"></div>
+  <div class="section-title">Keterangan Kerosakan</div>
+  <p style="font-size:13px;line-height:1.7;background:#f8faff;padding:12px;border-radius:8px;">${k.keterangan}</p>
+  <div class="info-divider"></div>
+  <div class="info-row">
+    <div class="info-item"><div class="info-label">Dilaporkan Oleh</div><div class="info-value">${k.dilaporkan}</div></div>
+    <div class="info-item"><div class="info-label">Tarikh Laporan</div><div class="info-value">${k.tarikh}</div></div>
+    <div class="info-item"><div class="info-label">Kelulusan KJ</div><div class="info-value">${k.kelulusan}</div></div>
+    <div class="info-item"><div class="info-label">Tarikh Selesai</div><div class="info-value">${k.tarikh_selesai||'–'}</div></div>
+  </div>
+  ${k.cadangan?`<div class="info-divider"></div><div class="section-title">Cadangan Tindakan PAJ</div><p style="font-size:13px;">${k.cadangan}</p>`:''}`;
+  document.getElementById('modal-aset-detail-body').innerHTML = html;
+  document.querySelector('#modal-aset-detail .modal-header h3').textContent = 'Butiran Laporan Kerosakan';
+  showModal('modal-aset-detail');
+}
+function exportKerosakanExcel() {
+  const rows=[['No.','No. Laporan','No. Aset','Nama Aset','Bengkel','Jenis Kerosakan','Keterangan','Dilaporkan Oleh','Tarikh','Status','Cadangan PAJ','Kelulusan KJ','Tarikh Selesai']];
+  getKerosakan().forEach((k,i)=>rows.push([i+1,k.no_laporan,k.no_aset,k.nama_aset,k.bengkel,k.jenis,k.keterangan,k.dilaporkan,k.tarikh,k.status,k.cadangan||'',k.kelulusan,k.tarikh_selesai||'']));
+  exportXlsx(rows,'Laporan_Kerosakan_JKM_PSAS');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// KALENDER MODULE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const AKTIVITI = {
+  1: [
+    { id:'k-1-1', label:'Penyediaan Pelan Penyelenggaraan Tahunan', warna:'#16a34a' },
+    { id:'k-1-2', label:'Laporan Suku Tahun Q1 (Jan–Mac)', warna:'#2563eb' },
+    { id:'k-1-3', label:'Kemaskini Rekod Aset Berterusan', warna:'#64748b' }
+  ],
+  2: [{ id:'k-2-1', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }],
+  3: [{ id:'k-3-1', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }],
+  4: [
+    { id:'k-4-1', label:'Laporan Suku Tahun Q2 (Apr–Jun)', warna:'#2563eb' },
+    { id:'k-4-2', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }
+  ],
+  5: [{ id:'k-5-1', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }],
+  6: [{ id:'k-6-1', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }],
+  7: [
+    { id:'k-7-1', label:'Laporan Suku Tahun Q3 (Jul–Sep)', warna:'#2563eb' },
+    { id:'k-7-2', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }
+  ],
+  8: [
+    { id:'k-8-1', label:'Pemeriksaan Peralatan P&P (Ogos)', warna:'#d97706' },
+    { id:'k-8-2', label:'Kemaskini Status Aset Hasil Pemeriksaan', warna:'#d97706' },
+    { id:'k-8-3', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }
+  ],
+  9: [
+    { id:'k-9-1', label:'Laporan Keperluan Peralatan Baharu', warna:'#2563eb' },
+    { id:'k-9-2', label:'Laporan Status Pemeriksaan kepada KJ', warna:'#2563eb' },
+    { id:'k-9-3', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }
+  ],
+  10: [
+    { id:'k-10-1', label:'Laporan Suku Tahun Q4 (Okt–Dis)', warna:'#2563eb' },
+    { id:'k-10-2', label:'Semakan Pengurusan Status Peralatan', warna:'#7c3aed' },
+    { id:'k-10-3', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }
+  ],
+  11: [{ id:'k-11-1', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }],
+  12: [
+    { id:'k-12-1', label:'Penyediaan Pelan Penyelenggaraan Tahun Hadapan', warna:'#16a34a' },
+    { id:'k-12-2', label:'Kemaskini Rekod Aset & Kerosakan', warna:'#64748b' }
+  ]
+};
+const BULAN_NAMA = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
+function renderKalender() {
+  const sel = document.getElementById('kal-tahun'); if(!sel) return;
+  const tahun = parseInt(sel.value) || new Date().getFullYear();
+  const kalData = getKalender();
+  const html = Object.entries(AKTIVITI).map(([bulan, events]) => `
+    <div class="cal-month">
+      <div class="cal-month-header"><i class="fa-regular fa-calendar" style="margin-right:7px;opacity:0.8;"></i>${BULAN_NAMA[parseInt(bulan)-1]}</div>
+      <div class="cal-month-body">
+        ${events.map(ev => {
+          const key = `${tahun}-${ev.id}`;
+          const done = kalData[key];
+          return `<div class="cal-event">
+            <div class="cal-dot" style="background:${ev.warna}"></div>
+            <span class="cal-event-text" style="${done?'text-decoration:line-through;color:var(--text-muted)':''}">${ev.label}</span>
+            <span class="cal-check ${done?'done':''}" onclick="toggleKalEvent('${key}',this)" title="${done?'Tandakan belum selesai':'Tandakan selesai'}"><i class="fa-solid ${done?'fa-circle-check':'fa-circle'}"></i></span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+  document.getElementById('calendar-grid').innerHTML = html;
+}
+function toggleKalEvent(key, el) {
+  const kal = getKalender(); kal[key] = !kal[key];
+  localStorage.setItem('jkm_kalender', JSON.stringify(kal));
+  renderKalender();
+}
+function initKalenderYearSelect() {
+  const sel = document.getElementById('kal-tahun');
+  const cur = new Date().getFullYear();
+  sel.innerHTML = [cur-1,cur,cur+1].map(y=>`<option value="${y}" ${y===cur?'selected':''}>${y}</option>`).join('');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LAPORAN MODULE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function switchTab(group, tab) {
+  if(group==='laporan') {
+    activeLaporanTab=tab;
+    document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['status','pemeriksaan','kerosakan','pelupusan'][i]===tab));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===`tab-laporan-${tab}`));
+    renderLaporan();
+  }
+}
+function getFilteredLaporan() {
+  const fB=document.getElementById('lap-filter-bengkel').value;
+  const fK=document.getElementById('lap-filter-kategori').value;
+  const fS=document.getElementById('lap-filter-status').value;
+  const fD=document.getElementById('lap-dari').value;
+  const fH=document.getElementById('lap-hingga').value;
+  const aset=getAset().filter(a=>(!fB||a.bengkel===fB)&&(!fK||a.kategori===fK)&&(!fS||a.status===fS)&&(!fD||a.tarikh_periksa>=fD)&&(!fH||a.tarikh_periksa<=fH));
+  const periksa=getPemeriksaan().filter(p=>(!fB||p.bengkel===fB)&&(!fD||p.tarikh>=fD)&&(!fH||p.tarikh<=fH));
+  const rosak=getKerosakan().filter(k=>(!fB||k.bengkel===fB)&&(!fD||k.tarikh>=fD)&&(!fH||k.tarikh<=fH));
+  return {aset,periksa,rosak};
+}
+function renderLaporan() {
+  const {aset,periksa,rosak}=getFilteredLaporan();
+  // Status tab
+  document.getElementById('lap-status-tbody').innerHTML=aset.length===0?'<tr><td colspan="8" class="text-center text-muted" style="padding:30px;">Tiada rekod.</td></tr>':aset.map((a,i)=>`<tr><td>${i+1}</td><td>${a.no_pendaftaran}</td><td>${a.nama_aset}</td><td>${a.kategori}</td><td>${a.bengkel}</td><td>${statusBadge(a.status)}</td><td>${a.pegawai||'–'}</td><td style="font-size:12px">${a.tarikh_periksa||'–'}</td></tr>`).join('');
+  // Pemeriksaan tab
+  document.getElementById('lap-periksa-tbody').innerHTML=periksa.length===0?'<tr><td colspan="9" class="text-center text-muted" style="padding:30px;">Tiada rekod.</td></tr>':periksa.map((p,i)=>`<tr><td>${i+1}</td><td>${p.no_pemeriksaan}</td><td>${p.no_aset}</td><td>${p.nama_aset}</td><td>${p.bengkel}</td><td>${p.keadaan}</td><td>${p.fungsi}</td><td>${p.pemeriksa}</td><td style="font-size:12px">${p.tarikh}</td></tr>`).join('');
+  // Kerosakan tab
+  document.getElementById('lap-rosak-tbody').innerHTML=rosak.length===0?'<tr><td colspan="8" class="text-center text-muted" style="padding:30px;">Tiada rekod.</td></tr>':rosak.map((k,i)=>`<tr><td>${i+1}</td><td>${k.no_laporan}</td><td>${k.nama_aset}</td><td>${k.bengkel}</td><td>${k.jenis}</td><td>${kerosakanBadge(k.status)}</td><td style="font-size:12px">${k.cadangan||'–'}</td><td style="font-size:12px">${k.tarikh}</td></tr>`).join('');
+  // Pelupusan tab
+  const pelupusan=getAset().filter(a=>a.status==='Cadangan Pelupusan');
+  const pelupusanK=getKerosakan().filter(k=>k.status==='Cadangan Pelupusan');
+  const pelItems=[...pelupusan.map(a=>({no:a.no_pendaftaran,nama:a.nama_aset,model:a.model||'–',bengkel:a.bengkel,nilai:a.nilai,tahun:a.tahun,kelulusan:'Menunggu'})),...pelupusanK.filter(k=>!pelupusan.find(a=>a.no_pendaftaran===k.no_aset)).map(k=>({no:k.no_aset,nama:k.nama_aset,model:'–',bengkel:k.bengkel,nilai:'–',tahun:'–',kelulusan:k.kelulusan}))];
+  document.getElementById('lap-pelupusan-tbody').innerHTML=pelItems.length===0?'<tr><td colspan="8" class="text-center text-muted" style="padding:30px;">Tiada cadangan pelupusan.</td></tr>':pelItems.map((p,i)=>`<tr><td>${i+1}</td><td>${p.no}</td><td>${p.nama}</td><td>${p.model}</td><td>${p.bengkel}</td><td>${p.nilai?'RM '+parseFloat(p.nilai||0).toLocaleString('ms-MY',{minimumFractionDigits:2}):'–'}</td><td>${p.tahun}</td><td><span class="badge ${p.kelulusan==='Diluluskan'?'badge-selesai':'badge-semakan'}">${p.kelulusan}</span></td></tr>`).join('');
+  // Chart
+  if(chartLaporanObj){chartLaporanObj.destroy();chartLaporanObj=null;}
+  const bengkelData=BENGKEL.map(b=>aset.filter(a=>a.bengkel===b).length);
+  chartLaporanObj=new Chart(document.getElementById('chartLaporan'),{type:'bar',data:{labels:BENGKEL.map(b=>b.replace('Bengkel ','B. ').replace('Makmal ','Mkl. ')),datasets:[{label:'Jumlah Aset',data:bengkelData,backgroundColor:'rgba(26,58,107,0.75)',borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+}
+function resetLaporanFilter() {
+  ['lap-filter-bengkel','lap-filter-kategori','lap-filter-status','lap-dari','lap-hingga'].forEach(id=>document.getElementById(id).value='');
+  renderLaporan();
+}
+function exportCurrentLaporan() {
+  const {aset,periksa,rosak}=getFilteredLaporan();
+  let rows,name;
+  if(activeLaporanTab==='status'){rows=[['No.','No. Pendaftaran','Nama Aset','Kategori','Bengkel','Status','Pegawai','Tarikh Pemeriksaan']];aset.forEach((a,i)=>rows.push([i+1,a.no_pendaftaran,a.nama_aset,a.kategori,a.bengkel,a.status,a.pegawai||'',a.tarikh_periksa||'']));name='Laporan_Status_Aset';}
+  else if(activeLaporanTab==='pemeriksaan'){rows=[['No.','No. Pemeriksaan','No. Aset','Nama Aset','Bengkel','Keadaan','Fungsi','Pemeriksa','Tarikh']];periksa.forEach((p,i)=>rows.push([i+1,p.no_pemeriksaan,p.no_aset,p.nama_aset,p.bengkel,p.keadaan,p.fungsi,p.pemeriksa,p.tarikh]));name='Laporan_Pemeriksaan_PdP';}
+  else if(activeLaporanTab==='kerosakan'){rows=[['No.','No. Laporan','Nama Aset','Bengkel','Jenis','Status','Cadangan PAJ','Tarikh']];rosak.forEach((k,i)=>rows.push([i+1,k.no_laporan,k.nama_aset,k.bengkel,k.jenis,k.status,k.cadangan||'',k.tarikh]));name='Laporan_Kerosakan';}
+  else{const p=getAset().filter(a=>a.status==='Cadangan Pelupusan');rows=[['No.','No. Pendaftaran','Nama Aset','Model','Bengkel','Nilai (RM)','Tahun','Status']];p.forEach((a,i)=>rows.push([i+1,a.no_pendaftaran,a.nama_aset,a.model||'',a.bengkel,a.nilai||'',a.tahun||'','Cadangan Pelupusan']));name='Laporan_Cadangan_Pelupusan';}
+  exportXlsx(rows,name+'_JKM_PSAS');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PENGGUNA MODULE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function roleBadge(r) {
+  const m={'PAJ':'badge-paj','KJ':'badge-kj','PPJ':'badge-ppj','Penyelia BMB':'badge-penyelia','PBMB':'badge-pbmb'};
+  return `<span class="badge ${m[r]||''}">${r}</span>`;
+}
+function renderUserTable() {
+  const users=getUsers();
+  document.getElementById('user-tbody').innerHTML=users.map((u,i)=>`<tr>
+    <td>${i+1}</td><td class="fw-bold">${u.nama}</td><td style="color:var(--primary)">${u.username}</td>
+    <td>${roleBadge(u.peranan)}</td><td>${u.bengkel||'–'}</td>
+    <td><span class="badge ${u.status==='Aktif'?'badge-digunakan':'badge-tidak'}">${u.status}</span></td>
+    <td><div class="btn-group">
+      <button class="btn btn-sm btn-primary btn-icon" onclick="openUserModal('${u.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+      ${u.id!=='u1'?`<button class="btn btn-sm btn-danger btn-icon" onclick="confirmDelete('user','${u.id}','${u.username}')" title="Padam"><i class="fa-solid fa-trash"></i></button>`:''}
+    </div></td>
+  </tr>`).join('');
+}
+function openUserModal(id) {
+  document.getElementById('user-edit-id').value=id||'';
+  if(id){
+    const u=getUsers().find(x=>x.id===id); if(!u) return;
+    document.getElementById('modal-user-title').textContent='Edit Pengguna — '+u.nama;
+    document.getElementById('u-nama').value=u.nama; document.getElementById('u-username').value=u.username;
+    document.getElementById('u-password').value=''; document.getElementById('u-peranan').value=u.peranan;
+    document.getElementById('u-bengkel').value=u.bengkel||''; document.getElementById('u-status').value=u.status;
+  } else {
+    document.getElementById('modal-user-title').textContent='Tambah Pengguna Baharu';
+    document.getElementById('modal-pengguna').querySelectorAll('input,select').forEach(el=>{if(el.id!=='user-edit-id')el.value='';});
+    document.getElementById('u-peranan').value='Penyelia BMB'; document.getElementById('u-status').value='Aktif';
+  }
+  showModal('modal-pengguna');
+}
+function saveUser() {
+  const nama=document.getElementById('u-nama').value.trim(); const uname=document.getElementById('u-username').value.trim(); const pass=document.getElementById('u-password').value;
+  if(!nama||!uname){showToast('Sila isikan nama penuh dan nama pengguna.','danger');return;}
+  const users=getUsers(); const editId=document.getElementById('user-edit-id').value;
+  if(!editId&&users.find(u=>u.username===uname)){showToast('Nama pengguna sudah wujud.','danger');return;}
+  const existing=editId?users.find(x=>x.id===editId):null;
+  const obj={id:editId||'u'+Date.now(),nama,username:uname,password:pass||(existing?existing.password:'psas2024'),peranan:document.getElementById('u-peranan').value,bengkel:document.getElementById('u-bengkel').value,status:document.getElementById('u-status').value};
+  if(editId){const idx=users.findIndex(x=>x.id===editId);users[idx]=obj;}else{users.push(obj);}
+  setData('jkm_users',users); closeModal('modal-pengguna'); renderUserTable();
+  showToast(editId?'Maklumat pengguna dikemaskini.':'Pengguna baharu berjaya ditambah.','success');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UTILITIES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function showModal(id) { const m=document.getElementById(id); m.classList.add('show'); document.body.style.overflow='hidden'; }
+function closeModal(id) { const m=document.getElementById(id); m.classList.remove('show'); document.body.style.overflow=''; }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target===m) closeModal(m.id); }));
+function showToast(msg, type='info') {
+  const tc=document.getElementById('toast-container');
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  const icons={success:'fa-circle-check',danger:'fa-circle-exclamation',warning:'fa-triangle-exclamation',info:'fa-circle-info'};
+  t.innerHTML=`<i class="fa-solid ${icons[type]||icons.info}"></i><span>${msg}</span>`;
+  tc.appendChild(t); setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.4s';setTimeout(()=>t.remove(),400);},3000);
+}
+function exportXlsx(rows, filename) {
+  if(typeof XLSX==='undefined'){showToast('Library XLSX tidak tersedia.','danger');return;}
+  const wb=XLSX.utils.book_new(); const ws=XLSX.utils.aoa_to_sheet(rows);
+  const cols=rows[0].map((_,i)=>({wch:Math.max(...rows.map(r=>String(r[i]||'').length),12)}));
+  ws['!cols']=cols; XLSX.utils.book_append_sheet(wb,ws,'Data');
+  XLSX.writeFile(wb,filename+'_'+new Date().toISOString().split('T')[0]+'.xlsx');
+  showToast('Fail Excel berjaya dieksport.','success');
+}
+// Enter key on login
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// INIT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+(function init() {
+  seedData();
+  initKalenderYearSelect();
+  // Restore session
+  const saved = sessionStorage.getItem('jkm_session');
+  if (saved) {
+    try {
+      const u = JSON.parse(saved);
+      const users = getUsers();
+      const valid = users.find(x => x.id === u.id && x.status === 'Aktif');
+      if (valid) {
+        currentUser = valid;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-shell').style.display = 'block';
+        setupShell();
+        showPage('dashboard');
+        return;
+      }
+    } catch(e) {}
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+})();
+</script>
+</body>
+</html>
